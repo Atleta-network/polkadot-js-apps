@@ -20,7 +20,7 @@ export const testChains: Omit<EndpointOption, 'teleport'>[] = [
   {
     info: 'Sportchain',
     providers: {
-      'Node #1': 'ws://127.0.0.1:9944'
+      'Node #1': 'ws://65.109.166.237:9944'
     },
     text: 'Sportchain Devnet',
     ui: {
