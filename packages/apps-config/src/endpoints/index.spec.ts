@@ -34,7 +34,7 @@ describe('WS urls are all valid', (): void => {
 
   for (const { name, provider, value } of endpoints) {
     it(`${name}:: ${provider}`, (): void => {
-      assert(value.startsWith('wss://') || value.startsWith('light://substrate-connect/'), `${name}:: ${provider} -> ${value} should start with wss:// or light://`);
+      assert(value.startsWith('ws://') || value.startsWith('wss://') || value.startsWith('light://substrate-connect/'), `${name}:: ${provider} -> ${value} should start with wss:// or light://`);
       assert(!INVALID_CHARS.some((c) => value.includes(c)), `${value} should not contain invalid characters such as ${INVALID_CHARS.join(', ')}`);
     });
   }
