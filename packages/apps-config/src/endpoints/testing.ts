@@ -27,6 +27,16 @@ export const testChains: Omit<EndpointOption, 'teleport'>[] = [
       color: '#000000'
     }
   },
+  {
+    info: 'Sportchain',
+    providers: {
+      'Node #1': 'ws://116.202.100.101:9944'
+    },
+    text: 'Sportchain Testnet',
+    ui: {
+      color: '#000000'
+    }
+  },
   // {
   //   info: '3dpass-testnet',
   //   providers: {
