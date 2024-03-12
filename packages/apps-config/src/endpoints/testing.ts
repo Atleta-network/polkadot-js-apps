@@ -18,21 +18,11 @@ export * from './testingRelayWestend.js';
 // IMPORTANT: Alphabetical based on text
 export const testChains: Omit<EndpointOption, 'teleport'>[] = [
   {
-    info: 'Sportchain',
+    info: 'Atleta',
     providers: {
-      'Node #1': 'ws://65.109.166.237:9944'
+      'Node #1': 'wss://atleta-testnet-rpc.quark.blue:9944'
     },
-    text: 'Sportchain Devnet',
-    ui: {
-      color: '#000000'
-    }
-  },
-  {
-    info: 'Sportchain',
-    providers: {
-      'Node #1': 'ws://116.202.100.101:9944'
-    },
-    text: 'Sportchain Testnet',
+    text: 'Atleta Testnet',
     ui: {
       color: '#000000'
     }

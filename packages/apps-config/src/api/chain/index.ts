@@ -5,7 +5,7 @@ import type { OverrideBundleDefinition } from '@polkadot/types/types';
 
 import cere from './cere.js';
 import kilt from './kilt.js';
-import sportchain from './sportchain.js';
+import atleta from './atleta.js';
 
 if (!kilt) {
   throw new Error('Unable to retrieve kilt');
@@ -19,7 +19,7 @@ const chain: Record<string, OverrideBundleDefinition> = {
   'KILT Peregrine Stagenet': kilt['KILT Peregrine Stagenet'],
   'KILT Spiritnet': kilt['KILT Spiritnet'],
   'KILT Spiritnet Develop': kilt['KILT Spiritnet Develop'],
-  'Sporchain Devnet': sportchain
+  'Atleta': atleta
 };
 
 export default chain;

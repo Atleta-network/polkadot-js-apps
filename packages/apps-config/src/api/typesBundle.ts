@@ -107178,7 +107178,7 @@ export const typesBundle = {
         }
       ]
     },
-    "sportchain": {
+    "atleta": {
       "types": [{
         "minmax": [
           0,
