@@ -7,11 +7,10 @@
 set -e
 
 # the docker image name and dockerhub repo
-NAME="polkadot-js-apps"
-REPO="jacogr"
+source docker/.env
 
 # extract the current npm version from package.json
-VERSION=$(cat package.json \
+IMAGE_VERSION=$(cat package.json \
   | grep version \
   | head -1 \
   | awk -F: '{ print $2 }' \
@@ -19,15 +18,15 @@ VERSION=$(cat package.json \
   | sed 's/ //g')
 
 echo "*** Building $NAME"
-docker build -t $NAME -f docker/Dockerfile .
+docker compose -f docker/docker-compose.yaml build 
 
-docker login -u $REPO -p $DOCKER_PASS
+docker login -u $IMAGE_REPO -p $DOCKER_PASS
 
-echo "*** Tagging $REPO/$NAME"
-if [[ $VERSION != *"beta"* ]]; then
-  docker tag $NAME $REPO/$NAME:$VERSION
+echo "*** Tagging $IMAGE_REPO/$IMAGE_NAME"
+if [[ $IMAGE_VERSION != *"beta"* ]]; then
+  docker tag $IMAGE_NAME $IMAGE_REPO/$IMAGE_NAME:$IMAGE_VERSION
 fi
-docker tag $NAME $REPO/$NAME
+docker tag $IMAGE_NAME $IMAGE_REPO/$IMAGE_NAME
 
-echo "*** Publishing $NAME"
-docker push $REPO/$NAME
+echo "*** Publishing $IMAGE_REPO/$IMAGE_NAME"
+docker push $IMAGE_REPO/$IMAGE_NAME
