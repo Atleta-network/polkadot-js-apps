@@ -16,7 +16,7 @@ jobs:
 
     - name: Create Image Tarball for Explorer
       run: |
-        docker compose -f docker/docker-compose.yaml build
+        docker build -t sportchain-explorer -f docker/Dockerfile .
         docker save -o sportchain-explorer.tar sportchain-explorer
         mkdir -p artifacts/
         mv sportchain-explorer.tar artifacts/
