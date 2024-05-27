@@ -24,7 +24,7 @@ services:
     volumes:
       - ./nginx/ssl:/etc/letsencrypt:rw
       - ./certbot/www:/var/www/certbot:rw
-    entrypoint: "/bin/sh -c 'trap exit TERM; certbot certonly --standalone --preferred-challenges http -d $$CERTBOT_DOMAIN --email $$CERTBOT_EMAIL --agree-tos --non-interactive --verbose; sleep 12h'"
+    entrypoint: "/bin/sh -c 'trap exit TERM; certbot certonly --webroot -w /var/www/certbot/ --preferred-challenges http -d $$CERTBOT_DOMAIN --email $$CERTBOT_EMAIL --agree-tos --non-interactive --verbose; sleep 12h'"
     environment:
       - CERTBOT_EMAIL=admin@moneyfactory.io
       - CERTBOT_DOMAIN=polkadot-explorer.atleta.network
