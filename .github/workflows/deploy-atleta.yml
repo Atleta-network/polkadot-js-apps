@@ -16,7 +16,7 @@ jobs:
 
     - name: Create Image Tarball for Explorer
       run: |
-        docker build -t sportchain-explorer -f docker/Dockerfile .
+        docker compose -f docker/docker-compose.yaml build
         docker save -o sportchain-explorer.tar sportchain-explorer
         mkdir -p artifacts/
         mv sportchain-explorer.tar artifacts/
@@ -33,6 +33,7 @@ jobs:
     - name: Copy Files to Server
       run: |
         scp artifacts/sportchain-explorer.tar ${{ secrets.EXPLORER_USERNAME}}@${{ secrets.EXPLORER_HOST }}:/sportchain/
+        scp docker-compose.yaml ${{ secrets.EXPLORER_USERNAME}}@${{ secrets.EXPLORER_HOST }}:/sportchain/docker-compose.yaml
 
     - name: SSH into Server and Deploy
       uses: appleboy/ssh-action@v1.0.0
@@ -43,6 +44,4 @@ jobs:
         script: |
           cd /sportchain
           docker load -i sportchain-explorer.tar
-          docker stop $(docker ps -qa)
-          docker rm -v $(docker ps -qa)
-          docker run -d -p 80:80 sportchain-explorer
+          docker compose up -d

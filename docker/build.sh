@@ -24,8 +24,9 @@ docker login -u $IMAGE_REPO -p $DOCKER_PASS
 
 echo "*** Tagging $IMAGE_REPO/$IMAGE_NAME"
 if [[ $IMAGE_VERSION != *"beta"* ]]; then
-  docker tag $IMAGE_REPO/$IMAGE_NAME $IMAGE_REPO/$IMAGE_NAME:$IMAGE_VERSION
+  docker tag $IMAGE_NAME $IMAGE_REPO/$IMAGE_NAME:$IMAGE_VERSION
 fi
+docker tag $IMAGE_NAME $IMAGE_REPO/$IMAGE_NAME
 
-echo "*** Publishing $IMAGE_NAME"
-docker push $$IMAGE_REPO/$IMAGE_NAME
+echo "*** Publishing $IMAGE_REPO/$IMAGE_NAME"
+docker push $IMAGE_REPO/$IMAGE_NAME
