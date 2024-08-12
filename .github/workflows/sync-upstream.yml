@@ -1,5 +1,8 @@
 name: 'Upstream Sync'
 
+permissions:
+  contents: write
+
 on:
   pull_request:
 
