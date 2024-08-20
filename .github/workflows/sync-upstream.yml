@@ -28,7 +28,7 @@ jobs:
       with:
         # optional: set the branch to checkout,
         ref: upstream
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.ACCESS_TOKEN }}
         # persist-credentials: false
 
     - name: Sync upstream changes
@@ -36,7 +36,7 @@ jobs:
       uses: aormsby/Fork-Sync-With-Upstream-action@v3.4.1
       with:
         target_sync_branch: upstream
-        # target_repo_token: ${{ secrets.GITHUB_TOKEN }}
+        target_repo_token: ${{ secrets.ACCESS_TOKEN }}
         upstream_sync_branch: master
         upstream_sync_repo: polkadot-js/apps
 
@@ -45,8 +45,10 @@ jobs:
 
     # Display a sample message based on the sync output var 'has_new_commits'
     - name: New commits found
+      id: last_commit
       if: steps.sync.outputs.has_new_commits == 'true'
-      run: echo "New commits were found to sync."
+      run: | 
+        echo "New commits were found to sync."
 
     - name: No new commits
       if: steps.sync.outputs.has_new_commits == 'false'
@@ -54,3 +56,11 @@ jobs:
 
     - name: Show value of 'has_new_commits'
       run: echo ${{ steps.sync.outputs.has_new_commits }}
+
+    - name: Create Pull Request
+      if: steps.sync.outputs.has_new_commits == 'true'
+      env: 
+        GH_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+      run: |
+        LAST_COMMIT_DATE=$(git log -1 --format='%cd' --date=format:'%Y-%m-%d %H:%M:%S' upstream)
+        gh pr create --title "Upstream sync. Last commit - $LAST_COMMIT_DATE" --body "This Pull Request was created automatically from workflow" --head upstream --base test-auto-pr --reviewer ${{ secrets.REVIEWER_1 }} --repo ${{ github.repository }}
