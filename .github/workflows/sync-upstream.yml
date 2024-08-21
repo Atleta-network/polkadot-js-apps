@@ -56,13 +56,16 @@ jobs:
       if: steps.sync.outputs.has_new_commits == 'false'
       run: echo "There were no new commits."
 
-    - name: Show value of 'has_new_commits'
-      run: echo ${{ steps.sync.outputs.has_new_commits }}
+    - name: Check if PR already exists
+      id: check_pr_exists
+      run: |
+        pr_count=$(gh pr list --repo ${{ github.repository }}) --json 'headRefName' --jq 'map(select(.headRefName == "upstream")) | length' 
+        echo "pr_count=${pr_count}" >> $GITHUB_ENV
 
     - name: Create Pull Request
-      if: steps.sync.outputs.has_new_commits == 'true'
+      if: steps.sync.outputs.has_new_commits == 'true' && steps.check_pr_exists.outputs.pr_count == '0'
       env: 
         GH_TOKEN: ${{ github.token }}
       run: |
         WORKFLOW_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-        gh pr create --title "Upstream Sync" --body "[View Workflow Run](${WORKFLOW_URL})" --head upstream --base test-auto-pr --reviewer ${{ secrets.REVIEWER_1 }} --repo ${{ github.repository }}
+        gh pr create --repo ${{ github.repository }} --title "Upstream Sync" --body "[View Workflow Run](${WORKFLOW_URL})" --head upstream --base test-auto-pr --reviewer ${{ secrets.REVIEWER_1 }} 
