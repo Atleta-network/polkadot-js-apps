@@ -61,7 +61,7 @@ jobs:
       env: 
         GH_TOKEN: ${{ github.token }}
       run: |
-        pr_count=$(gh pr list --repo ${{ github.repository }}) --json 'headRefName' --jq 'map(select(.headRefName == "upstream")) | length' 
+        pr_count=$(gh pr list --repo ${{ github.repository }} --json 'headRefName' --jq 'map(select(.headRefName == "upstream")) | length')
         echo "pr_count=${pr_count}" >> $GITHUB_ENV
 
     - name: Create Pull Request
