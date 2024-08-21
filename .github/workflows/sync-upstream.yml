@@ -2,6 +2,19 @@ name: 'Upstream Sync'
 
 permissions:
   contents: write
+  actions: write
+  attestations: write
+  checks: write
+  deployments: write
+  discussions: write
+  issues: write
+  packages: write
+  pages: write
+  pull-requests: write
+  repository-projects: write
+  security-events: write
+  statuses: write
+
 
 on:
   pull_request:
@@ -24,11 +37,11 @@ jobs:
 
     steps:
     - name: Checkout target repo
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         # optional: set the branch to checkout,
         ref: upstream
-        token: ${{ secrets.ACCESS_TOKEN }}
+        token: ${{ github.token }}
         # persist-credentials: false
 
     - name: Sync upstream changes
@@ -36,7 +49,7 @@ jobs:
       uses: aormsby/Fork-Sync-With-Upstream-action@v3.4.1
       with:
         target_sync_branch: upstream
-        target_repo_token: ${{ secrets.ACCESS_TOKEN }}
+        target_repo_token: ${{ github.token }}
         upstream_sync_branch: master
         upstream_sync_repo: polkadot-js/apps
 
@@ -60,7 +73,7 @@ jobs:
     - name: Create Pull Request
       if: steps.sync.outputs.has_new_commits == 'true'
       env: 
-        GH_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+        GH_TOKEN: ${{ github.token }}
       run: |
         LAST_COMMIT_DATE=$(git log -1 --format='%cd' --date=format:'%Y-%m-%d %H:%M:%S' upstream)
         gh pr create --title "Upstream sync. Last commit - $LAST_COMMIT_DATE" --body "This Pull Request was created automatically from workflow" --head upstream --base test-auto-pr --reviewer ${{ secrets.REVIEWER_1 }} --repo ${{ github.repository }}
