@@ -64,4 +64,5 @@ jobs:
       env: 
         GH_TOKEN: ${{ github.token }}
       run: |
+        WORKFLOW_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
         gh pr create --title "Upstream Sync" --body "[View Workflow Run](${WORKFLOW_URL})" --head upstream --base test-auto-pr --reviewer ${{ secrets.REVIEWER_1 }} --repo ${{ github.repository }}
