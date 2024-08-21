@@ -3,18 +3,7 @@ name: 'Upstream Sync'
 permissions:
   contents: write
   actions: write
-  attestations: write
-  checks: write
-  deployments: write
-  discussions: write
-  issues: write
-  packages: write
-  pages: write
   pull-requests: write
-  repository-projects: write
-  security-events: write
-  statuses: write
-
 
 on:
   pull_request:
@@ -75,5 +64,4 @@ jobs:
       env: 
         GH_TOKEN: ${{ github.token }}
       run: |
-        LAST_COMMIT_DATE=$(git log -1 --format='%cd' --date=format:'%Y-%m-%d %H:%M:%S' upstream)
-        gh pr create --title "Upstream sync. Last commit - $LAST_COMMIT_DATE" --body "This Pull Request was created automatically from workflow" --head upstream --base test-auto-pr --reviewer ${{ secrets.REVIEWER_1 }} --repo ${{ github.repository }}
+        gh pr create --title "Upstream Sync" --body "[View Workflow Run](${WORKFLOW_URL})" --head upstream --base test-auto-pr --reviewer ${{ secrets.REVIEWER_1 }} --repo ${{ github.repository }}
