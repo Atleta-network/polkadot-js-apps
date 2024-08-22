@@ -12,9 +12,9 @@ on:
     - cron:  '0 7 * * 1'
     # scheduled at 07:00 every Monday
 
-  workflow_dispatch:  # click the button on Github repo!
+  workflow_dispatch:
     inputs:
-      sync_test_mode: # Adds a boolean option that appears during manual workflow run for easy test mode config
+      sync_test_mode: 
         description: 'Fork Sync Test Mode'
         type: boolean
         default: false
@@ -28,35 +28,33 @@ jobs:
     - name: Checkout target repo
       uses: actions/checkout@v4
       with:
-        # optional: set the branch to checkout,
         ref: upstream
-        token: ${{ github.token }}
-        # persist-credentials: false
 
     - name: Sync upstream changes
       id: sync
-      uses: aormsby/Fork-Sync-With-Upstream-action@v3.4.1
-      with:
-        target_sync_branch: upstream
-        target_repo_token: ${{ github.token }}
-        upstream_sync_branch: master
-        upstream_sync_repo: polkadot-js/apps
+      run: |
+        git remote add --fetch upstream git@github.com:polkadot-js/apps.git
+        git branch -u upstream/master upstream
+        git pull upstream --ff-only
+        
+    - name: Check if there are new commits
+      id: check_commits
+      run: |
+        if git status --porcelain | grep -q '^\s*modified:.*'; then
+          echo "New commits found"
+          echo "new_commits=true" >> $GITHUB_ENV
+        else
+          echo "This branch is up to date"
+          echo "new_commits=false" >> $GITHUB_ENV
+        fi
 
-        # Set test_mode true during manual dispatch to run tests instead of the true action!!
-        test_mode: ${{ inputs.sync_test_mode }}
-
-    # Display a sample message based on the sync output var 'has_new_commits'
-    - name: New commits found
-      id: last_commit
-      if: steps.sync.outputs.has_new_commits == 'true'
-      run: | 
-        echo "New commits were found to sync."
-
-    - name: No new commits
-      if: steps.sync.outputs.has_new_commits == 'false'
-      run: echo "There were no new commits."
+    - name: Push changes to origin
+      if: steps.check_commits.outputs.new_commit == 'true'
+      run: |
+          git push origin upstream
 
     - name: Check if PR already exists
+      if: steps.check_commits.outputs.new_commit == 'true'
       id: check_pr_exists
       env: 
         GH_TOKEN: ${{ github.token }}
@@ -64,8 +62,14 @@ jobs:
         pr_count=$(gh pr list --repo ${{ github.repository }} --json 'headRefName' --jq 'map(select(.headRefName == "upstream")) | length')
         echo "pr_count=${pr_count}" >> $GITHUB_ENV
 
+        if [ "$pr_count" -gt 0 ]; then
+           echo "Pull Request already exists."
+        else
+           echo "Pull Request not found. It will be created"
+        fi
+
     - name: Create Pull Request
-      if: steps.sync.outputs.has_new_commits == 'true' && steps.check_pr_exists.outputs.pr_count == '0'
+      if: steps.check_commits.outputs.new_commit == 'true' && steps.check_pr_exists.outputs.pr_count == '0'
       env: 
         GH_TOKEN: ${{ github.token }}
       run: |
