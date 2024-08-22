@@ -38,15 +38,13 @@ jobs:
     - name: Sync upstream changes
       id: sync
       run: |
-        git branch
         git remote add --fetch upstream https://github.com/polkadot-js/apps.git
         git branch -u upstream/master upstream
-        git pull upstream --ff-only
         
     - name: Check if there are new commits to sync
       id: check_commits
       run: |
-        if if [ $(git rev-list HEAD...upstream/master --count) -ne 0 ]; then
+        if [ $(git rev-list HEAD...upstream/master --count) -ne 0 ]; then
           echo "New commits found"
           echo "new_commits=true" >> $GITHUB_ENV
         else
@@ -57,7 +55,8 @@ jobs:
     - name: Push changes to origin
       if: steps.check_commits.outputs.new_commit == 'true'
       run: |
-          git push origin upstream
+        git pull upstream --ff-only  
+        git push origin upstream
 
     - name: Check if PR already exists
       if: steps.check_commits.outputs.new_commit == 'true'
