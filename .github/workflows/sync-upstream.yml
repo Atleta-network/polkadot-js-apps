@@ -46,26 +46,26 @@ jobs:
       run: |
         if [ $(git rev-list HEAD...upstream/master --count) -ne 0 ]; then
           echo "New commits found"
-          echo "::set-output name=new_commits::true"
+          echo "new_commits=true" >> $GITHUB_ENV
         else
           echo "This branch is up to date"
-          echo "::set-output name=new_commits::false"
+          echo "new_commits=false" >> $GITHUB_ENV
         fi
 
     - name: Push changes to origin
-      if: steps.check_commits.outputs.new_commit == 'true'
+      if: env.new_commits == 'true'
       run: |
         git pull upstream --ff-only  
         git push origin upstream
 
     - name: Push changes to origin
-      if: steps.check_commits.outputs.new_commit == 'true'
+      if: env.new_commits == 'true'
       id: check_pr_exists
       env: 
         GH_TOKEN: ${{ github.token }}
       run: |
         pr_count=$(gh pr list --repo ${{ github.repository }} --json 'headRefName' --jq 'map(select(.headRefName == "upstream")) | length')
-        echo "::set-output name=pr_count::${pr_count}"
+        echo "pr_count=${pr_count}" >> $GITHUB_ENV
 
         if [ "$pr_count" -gt 0 ]; then
            echo "Pull Request already exists."
@@ -74,7 +74,7 @@ jobs:
         fi
 
     - name: Create Pull Request
-      if: steps.check_commits.outputs.new_commit == 'true' && steps.check_pr_exists.outputs.pr_count == '0'
+      if: env.new_commits == 'true' && env.pr_count == '0'
       env: 
         GH_TOKEN: ${{ github.token }}
       run: |
