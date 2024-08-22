@@ -37,8 +37,10 @@ jobs:
 
     - name: Sync upstream changes
       id: sync
+      env:
+        GH_TOKEN: ${{ github.token }}
       run: |
-        git remote add --fetch upstream https://github.com/polkadot-js/apps.git
+        git remote add --fetch upstream https://${GH_TOKEN}@github.com/polkadot-js/apps.git
         git branch -u upstream/master upstream
         
     - name: Check if there are new commits to sync
@@ -54,9 +56,11 @@ jobs:
 
     - name: Push changes to origin
       if: env.new_commits == 'true'
+      env:
+        GH_TOKEN: ${{ github.token }}
       run: |
         git pull upstream --ff-only  
-        git push origin upstream
+        git push https://${GH_TOKEN}@github.com/${{ github.repository }} upstream
 
     - name: Push changes to origin
       if: env.new_commits == 'true'
