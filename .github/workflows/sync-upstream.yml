@@ -38,14 +38,15 @@ jobs:
     - name: Sync upstream changes
       id: sync
       run: |
+        git branch
         git remote add --fetch upstream https://github.com/polkadot-js/apps.git
         git branch -u upstream/master upstream
         git pull upstream --ff-only
         
-    - name: Check if there are new commits
+    - name: Check if there are new commits to sync
       id: check_commits
       run: |
-        if git status --porcelain | grep -q '^\s*modified:.*'; then
+        if if [ $(git rev-list HEAD...upstream/master --count) -ne 0 ]; then
           echo "New commits found"
           echo "new_commits=true" >> $GITHUB_ENV
         else
