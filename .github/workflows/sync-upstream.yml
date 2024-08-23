@@ -63,7 +63,7 @@ jobs:
     - name: Push changes to origin
       if: env.new_commits == 'true'
       env:
-        GH_TOKEN: ${{ github.token }}
+        GH_TOKEN: ${{ secrets.ACCESS_TOKEN }}
       run: |
         git pull upstream --ff-only  
         git push origin upstream
