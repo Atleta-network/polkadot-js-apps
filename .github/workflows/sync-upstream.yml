@@ -61,11 +61,11 @@ jobs:
     - name: Push changes to origin
       if: env.new_commits == 'true'
       env:
-        GH_TOKEN: ${{ github.token }}
+        GH_TOKEN: ${{ secrets.ACCESS_TOKEN }}
       run: |
         git pull upstream --ff-only  
         echo ${{ github.repository }}
-        git push https://${GITHUB_ACTOR}:${GH_TOKEN}@github.com/${{ github.repository }} upstream
+        git push https://${GH_TOKEN}@github.com/${{ github.repository }} upstream
 
     - name: Push changes to origin
       if: env.new_commits == 'true'
