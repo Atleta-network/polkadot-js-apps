@@ -39,12 +39,10 @@ jobs:
       uses: actions/checkout@v4
       with:
         ref: upstream
-        token: ${{ github.token }}
+        token: ${{ secrets.ACCESS_TOKEN }}
 
     - name: Sync upstream changes
       id: sync
-      env:
-        GH_TOKEN: ${{ github.token }}
       run: |
         git remote add --fetch upstream https://github.com/polkadot-js/apps.git
         git branch -u upstream/master upstream
@@ -59,15 +57,14 @@ jobs:
           echo "This branch is up to date"
           echo "new_commits=false" >> $GITHUB_ENV
         fi
-
     - name: Push changes to origin
       if: env.new_commits == 'true'
       env:
         GH_TOKEN: ${{ secrets.ACCESS_TOKEN }}
       run: |
         git pull upstream --ff-only  
-        git push origin upstream
-
+        echo ${{ github.repository }}
+        git push https://${GH_TOKEN}@github.com/${{ github.repository }} upstream
     - name: Push changes to origin
       if: env.new_commits == 'true'
       id: check_pr_exists
@@ -76,17 +73,15 @@ jobs:
       run: |
         pr_count=$(gh pr list --repo ${{ github.repository }} --json 'headRefName' --jq 'map(select(.headRefName == "upstream")) | length')
         echo "pr_count=${pr_count}" >> $GITHUB_ENV
-
         if [ "$pr_count" -gt 0 ]; then
            echo "Pull Request already exists."
         else
            echo "Pull Request not found. It will be created"
         fi
-
     - name: Create Pull Request
       if: env.new_commits == 'true' && env.pr_count == '0'
       env: 
         GH_TOKEN: ${{ github.token }}
       run: |
         WORKFLOW_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-        gh pr create --repo ${{ github.repository }} --title "Upstream Sync" --body "[View Workflow Run](${WORKFLOW_URL})" --head upstream --base test-auto-pr --reviewer ${{ secrets.REVIEWER_1 }} 
+        gh pr create --repo ${{ github.repository }} --title "Upstream Sync" --body "[View Workflow Run](${WORKFLOW_URL})" --head upstream --base test-auto-pr --reviewer ${{ secrets.REVIEWER_1 }}
