@@ -39,7 +39,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         ref: upstream
-        token: ${{ secrets.ACCESS_TOKEN }}
+        token: ${{ github.token }}
 
     - name: Sync upstream changes
       id: sync
@@ -57,14 +57,16 @@ jobs:
           echo "This branch is up to date"
           echo "new_commits=false" >> $GITHUB_ENV
         fi
+
     - name: Push changes to origin
       if: env.new_commits == 'true'
       env:
-        GH_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+        GH_TOKEN: ${{ github.token }}
       run: |
         git pull upstream --ff-only  
         echo ${{ github.repository }}
-        git push https://${GH_TOKEN}@github.com/${{ github.repository }} upstream
+        git push https://${GITHUB_ACTOR}:${GH_TOKEN}@github.com/${{ github.repository }} upstream
+
     - name: Push changes to origin
       if: env.new_commits == 'true'
       id: check_pr_exists
@@ -78,6 +80,7 @@ jobs:
         else
            echo "Pull Request not found. It will be created"
         fi
+
     - name: Create Pull Request
       if: env.new_commits == 'true' && env.pr_count == '0'
       env: 
