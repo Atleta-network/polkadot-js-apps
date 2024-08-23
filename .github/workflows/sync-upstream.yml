@@ -4,16 +4,6 @@ permissions:
   contents: write
   actions: write
   pull-requests: write
-  attestations: write
-  checks: write
-  deployments: write
-  discussions: write
-  issues: write
-  packages: write
-  pages: write
-  repository-projects: write
-  security-events: write
-  statuses: write
 
 on:
   pull_request:
@@ -23,11 +13,6 @@ on:
     # scheduled at 07:00 every Monday
 
   workflow_dispatch:
-    inputs:
-      sync_test_mode: 
-        description: 'Fork Sync Test Mode'
-        type: boolean
-        default: false
 
 jobs:
   sync_latest_from_upstream:
@@ -39,36 +24,23 @@ jobs:
       uses: actions/checkout@v4
       with:
         ref: upstream
-        token: ${{ secrets.ACCESS_TOKEN }}
+        token: ${{ github.token }}
 
     - name: Sync upstream changes
       id: sync
-      run: |
-        git remote add --fetch upstream https://github.com/polkadot-js/apps.git
-        git branch -u upstream/master upstream
-        
-    - name: Check if there are new commits to sync
-      id: check_commits
-      run: |
-        if [ $(git rev-list HEAD...upstream/master --count) -ne 0 ]; then
-          echo "New commits found"
-          echo "new_commits=true" >> $GITHUB_ENV
-        else
-          echo "This branch is up to date"
-          echo "new_commits=false" >> $GITHUB_ENV
-        fi
+      uses: aormsby/Fork-Sync-With-Upstream-action@v3.4.1
+      with:
+        target_sync_branch: upstream
+        target_repo_token: ${{ github.token }}
+        upstream_sync_branch: master
+        upstream_sync_repo: polkadot-js/apps
 
-    - name: Push changes to origin
-      if: env.new_commits == 'true'
-      env:
-        GH_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-      run: |
-        git pull upstream --ff-only  
-        echo ${{ github.repository }}
-        git push https://${GH_TOKEN}@github.com/${{ github.repository }} upstream
+    - name: Output sync status
+      run: | 
+        echo "Commits to sync: ${{ steps.sync.outputs.has_new_commits }}"
 
-    - name: Push changes to origin
-      if: env.new_commits == 'true'
+    - name: Check if PR already exists
+      if: steps.sync.outputs.has_new_commits == 'true'
       id: check_pr_exists
       env: 
         GH_TOKEN: ${{ github.token }}
@@ -82,7 +54,7 @@ jobs:
         fi
 
     - name: Create Pull Request
-      if: env.new_commits == 'true' && env.pr_count == '0'
+      if: steps.sync.outputs.has_new_commits == 'true' && env.pr_count == '0'
       env: 
         GH_TOKEN: ${{ github.token }}
       run: |
