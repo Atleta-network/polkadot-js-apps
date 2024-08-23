@@ -39,7 +39,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         ref: upstream
-        token: ${{ github.token }}
+        token: ${{ secrets.ACCESS_TOKEN }}
 
     - name: Sync upstream changes
       id: sync
