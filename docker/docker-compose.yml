@@ -11,6 +11,16 @@ services:
     volumes:
       - ./nginx/ssl:/etc/nginx/ssl:ro
       - ./certbot/www:/var/www/certbot:ro
+    entrypoint: ["/bin/bash", "-c", "/usr/share/nginx/html/env.sh && \
+      nginx -g 'daemon off;' & \
+      while true; do \
+        sleep 3600; \
+        if [ \"$(md5sum /etc/nginx/ssl/live/polkadot-explorer.atleta.network/* | md5sum)\" != \"$(cat /tmp/md5sum || echo '')\" ]; then \
+          nginx -s reload; \
+          md5sum /etc/nginx/ssl/live/polkadot-explorer.atleta.network/* | md5sum > /tmp/md5sum; \
+        fi; \
+      done "]
+
     ports:
       - "0.0.0.0:80:80"
       - "0.0.0.0:443:443"
