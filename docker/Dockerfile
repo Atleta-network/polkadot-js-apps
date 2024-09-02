@@ -24,11 +24,20 @@ ENV WS_URL=
 
 WORKDIR /usr/share/nginx/html
 
-COPY docker/env.sh .
+COPY docker/nginx-container/env.sh .
 
 RUN apk add --no-cache bash; chmod +x env.sh
 
 COPY docker/nginx /etc/nginx
 COPY --from=builder /apps/packages/apps/build /usr/share/nginx/html
+
+COPY docker/nginx-container/docker-entrypoint.sh /
+COPY docker/nginx-container/check_ssl.sh /
+
+ENTRYPOINT ["/docker-entrypoint.sh"]
+
+EXPOSE 80
+
+STOPSIGNAL SIGQUIT
 
 CMD ["/bin/bash", "-c", "/usr/share/nginx/html/env.sh && nginx -g \"daemon off;\""]
