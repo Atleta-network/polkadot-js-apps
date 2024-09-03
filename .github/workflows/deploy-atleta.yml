@@ -10,16 +10,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: "recursive"
 
     - name: Create Image Tarball for Explorer
       run: |
-        docker build -t sportchain-explorer -f docker/Dockerfile .
-        docker save -o sportchain-explorer.tar sportchain-explorer
         mkdir -p artifacts/
-        mv sportchain-explorer.tar artifacts/
+        docker build --tag sportchain-explorer --file docker/Dockerfile .
+        docker save --output artifacts/sportchain-explorer.tar sportchain-explorer
 
     - name: Set up SSH
       run: |
@@ -43,5 +42,5 @@ jobs:
         key: ${{ secrets.EXPLORER_PRIVATE_KEY }}
         script: |
           cd /sportchain
-          docker load -i sportchain-explorer.tar
-          docker compose up -d
+          docker load --input sportchain-explorer.tar
+          docker compose up --detach
