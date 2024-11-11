@@ -9,7 +9,7 @@ services:
     container_name: sportchain-explorer
     restart: unless-stopped
     volumes:
-      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./certbot/conf:/etc/nginx/ssl:ro
       - ./certbot/www:/var/www/certbot:ro
 
     ports:
@@ -23,8 +23,8 @@ services:
     container_name: sportchain-explorer-certbot
     restart: always
     volumes:
-      - ./nginx/ssl:/etc/letsencrypt:rw
-      - ./certbot/www:/var/www/certbot:rw
+      - ./certbot/conf/:/etc/letsencrypt/:rw
+      - ./certbot/www/:/var/www/certbot/:rw
     entrypoint: "/bin/sh -c 'trap exit TERM; certbot certonly --webroot -w /var/www/certbot/ --preferred-challenges http -d $$CERTBOT_DOMAIN --email $$CERTBOT_EMAIL --agree-tos --non-interactive --verbose; sleep 12h'"
     environment:
       - CERTBOT_EMAIL=admin@moneyfactory.io
