@@ -20,9 +20,19 @@ export const testChains: Omit<EndpointOption, 'teleport'>[] = [
   {
     info: 'Atleta',
     providers: {
+      'Node #1': 'wss://rpc.testnet-v2.atleta.network:9944'
+    },
+    text: 'Atleta Testnet v2',
+    ui: {
+      color: '#000000'
+    }
+  },
+  {
+    info: 'Atleta',
+    providers: {
       'Node #1': 'wss://testnet-rpc.atleta.network:9944'
     },
-    text: 'Atleta Testnet',
+    text: 'Atleta Olympia',
     ui: {
       color: '#000000'
     }
