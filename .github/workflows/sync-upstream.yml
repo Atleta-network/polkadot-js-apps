@@ -1,0 +1,62 @@
+name: 'Upstream Sync'
+
+permissions:
+  contents: write
+  actions: write
+  pull-requests: write
+
+on:
+  pull_request:
+
+  schedule:
+    - cron:  '0 7 * * 1'
+    # scheduled at 07:00 every Monday
+
+  workflow_dispatch:
+
+jobs:
+  sync_latest_from_upstream:
+    runs-on: ubuntu-latest
+    name: Sync latest commits from upstream repo
+
+    steps:
+    - name: Checkout target repo
+      uses: actions/checkout@v4
+      with:
+        ref: upstream
+        token: ${{ github.token }}
+
+    - name: Sync upstream changes
+      id: sync
+      uses: aormsby/Fork-Sync-With-Upstream-action@v3.4.1
+      with:
+        target_sync_branch: upstream
+        target_repo_token: ${{ github.token }}
+        upstream_sync_branch: master
+        upstream_sync_repo: polkadot-js/apps
+
+    - name: Output sync status
+      run: | 
+        echo "Commits to sync: ${{ steps.sync.outputs.has_new_commits }}"
+
+    - name: Check if PR already exists
+      if: steps.sync.outputs.has_new_commits == 'true'
+      id: check_pr_exists
+      env: 
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        pr_count=$(gh pr list --repo ${{ github.repository }} --json 'headRefName' --jq 'map(select(.headRefName == "upstream")) | length')
+        echo "pr_count=${pr_count}" >> $GITHUB_ENV
+        if [ "$pr_count" -gt 0 ]; then
+           echo "Pull Request already exists."
+        else
+           echo "Pull Request not found. It will be created"
+        fi
+
+    - name: Create Pull Request
+      if: steps.sync.outputs.has_new_commits == 'true' && env.pr_count == '0'
+      env: 
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        WORKFLOW_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        gh pr create --repo ${{ github.repository }} --title "Upstream Sync" --body "[View Workflow Run](${WORKFLOW_URL})" --head upstream --base test-auto-pr --reviewer ${{ secrets.REVIEWER_1 }}
