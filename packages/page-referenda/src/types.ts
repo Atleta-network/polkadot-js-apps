@@ -1,12 +1,12 @@
-// Copyright 2017-2023 @polkadot/app-referenda authors & contributors
+// Copyright 2017-2025 @polkadot/app-referenda authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { PalletReferendaReferendumInfoConvictionVotingTally, PalletReferendaReferendumInfoRankedCollectiveTally, PalletReferendaTrackInfo } from '@polkadot/types/lookup';
 import type { BN } from '@polkadot/util';
 
-export type PalletReferenda = 'referenda' | 'rankedPolls' | 'fellowshipReferenda';
+export type PalletReferenda = 'referenda' | 'rankedPolls' | 'fellowshipReferenda'| 'ambassadorReferenda';
 
-export type PalletVote = 'convictionVoting' | 'rankedCollective' | 'fellowshipCollective';
+export type PalletVote = 'convictionVoting' | 'rankedCollective' | 'fellowshipCollective' | 'ambassadorCollective';
 
 export interface ReferendaGroup {
   key: string;

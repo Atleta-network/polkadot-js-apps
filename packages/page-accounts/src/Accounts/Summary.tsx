@@ -1,4 +1,4 @@
-// Copyright 2017-2023 @polkadot/app-accounts authors & contributors
+// Copyright 2017-2025 @polkadot/app-accounts authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { AccountBalance } from '../types.js';
@@ -28,11 +28,11 @@ function Summary ({ balance, className }: Props) {
       </CardSummary>
       <CardSummary
         className='media--900'
-        label={t('total transferrable')}
+        label={t('total transferable')}
       >
         <FormatBalance
           className={balance ? '' : '--tmp'}
-          value={balance?.transferrable || 1}
+          value={balance?.transferable || 1}
         />
       </CardSummary>
       <CardSummary label={t('total locked')}>

@@ -1,4 +1,4 @@
-// Copyright 2017-2023 @polkadot/react-signer authors & contributors
+// Copyright 2017-2025 @polkadot/react-signer authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { SignerOptions } from '@polkadot/api/submittable/types';
@@ -22,12 +22,16 @@ function SignFields ({ address, onChange, signedTx }: Props): React.ReactElement
   const { api } = useApi();
   const [blocks, setBlocks] = useState(() => new BN(64));
   const [nonce, setNonce] = useState(BN_ZERO);
+  const [currentNonce, setCurrentNonce] = useState(BN_ZERO);
   const { t } = useTranslation();
 
   useEffect((): void => {
     address && api.derive.balances
       .account(address)
-      .then(({ accountNonce }) => setNonce(accountNonce))
+      .then(({ accountNonce }) => {
+        setNonce(accountNonce);
+        setCurrentNonce(accountNonce);
+      })
       .catch(console.error);
   }, [address, api]);
 
@@ -52,7 +56,7 @@ function SignFields ({ address, onChange, signedTx }: Props): React.ReactElement
           isDisabled={!!signedTx}
           isZeroable
           label={t('Nonce')}
-          labelExtra={t('Current account nonce: {{accountNonce}}', { replace: { accountNonce: nonce } })}
+          labelExtra={t('Current account nonce: {{accountNonce}}', { replace: { accountNonce: currentNonce } })}
           onChange={_setNonce}
           value={nonce}
         />

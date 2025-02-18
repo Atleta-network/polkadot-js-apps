@@ -1,4 +1,4 @@
-// Copyright 2017-2023 @polkadot/app-files authors & contributors
+// Copyright 2017-2025 @polkadot/app-files authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { CancelTokenSource } from 'axios';
@@ -338,7 +338,7 @@ function UploadModal ({ className, file, onClose = NOOP, onSuccess = NOOP }: Pro
             label={t('Please choose account')}
             labelExtra={
               <Available
-                label={t('transferrable')}
+                label={t('transferable')}
                 params={account}
               />
             }

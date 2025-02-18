@@ -1,4 +1,4 @@
-// Copyright 2017-2023 @polkadot/apps-routing authors & contributors
+// Copyright 2017-2025 @polkadot/apps-routing authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Route, TFunction } from './types.js';
@@ -10,7 +10,7 @@ export default function create (t: TFunction): Route {
     Component,
     display: {
       needsApi: [
-        'tx.treasury.proposeSpend'
+        'query.treasury.proposals'
       ]
     },
     group: 'governance',

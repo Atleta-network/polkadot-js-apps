@@ -1,4 +1,4 @@
-// Copyright 2017-2023 @polkadot/app-accounts authors & contributors
+// Copyright 2017-2025 @polkadot/app-accounts authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { WithTranslation } from 'react-i18next';
@@ -37,7 +37,7 @@ export interface SortedAccount {
 export interface AccountBalance {
   total: BN;
   locked: BN;
-  transferrable: BN;
+  transferable: BN;
   bonded: BN;
   redeemable: BN;
   unbonding: BN;

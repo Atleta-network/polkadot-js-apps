@@ -1,4 +1,4 @@
-// Copyright 2017-2023 @polkadot/react-query authors & contributors
+// Copyright 2017-2025 @polkadot/react-query authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 export { default as Available } from './Available.js';
@@ -15,6 +15,7 @@ export { default as LockedVote } from './LockedVote.js';
 export { default as NodeName } from './NodeName.js';
 export { default as NodeVersion } from './NodeVersion.js';
 export { default as Nonce } from './Nonce.js';
+export { default as PoolSize } from './PoolSize.js';
 export { default as SessionToTime } from './SessionToTime.js';
 export { default as TimeNow } from './TimeNow.js';
 export { default as TotalInactive } from './TotalInactive.js';

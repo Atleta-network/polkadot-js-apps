@@ -1,4 +1,4 @@
-// Copyright 2017-2023 @polkadot/react-hooks authors & contributors
+// Copyright 2017-2025 @polkadot/react-hooks authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Call } from '@polkadot/types/interfaces';
@@ -16,7 +16,7 @@ import { useIsMountedRef } from './useIsMountedRef.js';
 
 type V1Weight = INumber;
 
-interface V2Weight {
+export interface V2Weight {
   refTime: ICompact<INumber>;
   proofSize: ICompact<INumber>;
 }
@@ -39,6 +39,14 @@ const EMPTY_STATE: Partial<Result> = {
 
 // return both v1 & v2 weight structures (would depend on actual use)
 export function convertWeight (weight: V1Weight | V2Weight): WeightResult {
+  // We need to handle it because sometimes input parameters are passed with type casting,
+  // which can result in them being undefined or null under certain conditions.
+  if (!weight) {
+    const refTime = BN_ZERO;
+
+    return { v1Weight: refTime, v2Weight: { proofSize: BN_ZERO, refTime } };
+  }
+
   if ((weight as V2Weight).proofSize) {
     // V2 weight
     const refTime = (weight as V2Weight).refTime.toBn();
@@ -48,13 +56,13 @@ export function convertWeight (weight: V1Weight | V2Weight): WeightResult {
     // V1.5 weight (when not converted)
     const refTime = (weight as V2Weight).refTime.toBn();
 
-    return { v1Weight: refTime, v2Weight: { refTime } };
+    return { v1Weight: refTime, v2Weight: { proofSize: BN_ZERO, refTime } };
   }
 
   // V1 weight
   const refTime = (weight as V1Weight).toBn();
 
-  return { v1Weight: refTime, v2Weight: { refTime } };
+  return { v1Weight: refTime, v2Weight: { proofSize: BN_ZERO, refTime } };
 }
 
 // for a given call, calculate the weight

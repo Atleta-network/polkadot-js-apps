@@ -1,8 +1,10 @@
-// Copyright 2017-2023 @polkadot/app-staking authors & contributors
+// Copyright 2017-2025 @polkadot/app-staking authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { ApiPromise } from '@polkadot/api';
 import type { SubmittableExtrinsic } from '@polkadot/api/types';
+import type { BatchOptions } from '@polkadot/react-hooks/types';
+import type { u32 } from '@polkadot/types';
 import type { EraIndex } from '@polkadot/types/interfaces';
 import type { PayoutValidator } from './types.js';
 
@@ -37,16 +39,30 @@ function createExtrinsics (api: ApiPromise, payout: PayoutValidator | PayoutVali
   if (!Array.isArray(payout)) {
     const { eras, validatorId } = payout;
 
+    if (eras.every((e) => e.isClaimed)) {
+      return null;
+    }
+
     return eras.length === 1
       ? [api.tx.staking.payoutStakers(validatorId, eras[0].era)]
-      : createStream(api, eras.map((era): SinglePayout => ({ era: era.era, validatorId })));
+      : createStream(api, eras.filter((era) => !era.isClaimed).map((era): SinglePayout => ({ era: era.era, validatorId })));
   } else if (payout.length === 1) {
+    if (payout[0].eras.every((e) => e.isClaimed)) {
+      return null;
+    }
+
     return createExtrinsics(api, payout[0]);
   }
 
+  if (!payout.some((p) => p.eras.some((e) => !e.isClaimed))) {
+    return null;
+  }
+
   return createStream(api, payout.reduce((payouts: SinglePayout[], { eras, validatorId }): SinglePayout[] => {
-    eras.forEach(({ era }): void => {
-      payouts.push({ era, validatorId });
+    eras.forEach(({ era, isClaimed }): void => {
+      if (!isClaimed) {
+        payouts.push({ era, validatorId });
+      }
     });
 
     return payouts;
@@ -59,9 +75,10 @@ function PayButton ({ className, isAll, isDisabled, payout }: Props): React.Reac
   const [isVisible, togglePayout] = useToggle();
   const [accountId, setAccount] = useState<string | null>(null);
   const [txs, setTxs] = useState<SubmittableExtrinsic<'promise'>[] | null>(null);
-  const batchOpts = useMemo(
+  const batchOpts = useMemo<BatchOptions>(
     () => ({
-      max: 36 * 64 / (api.consts.staking.maxNominatorRewardedPerValidator?.toNumber() || 64)
+      max: 36 * 64 / ((api.consts.staking.maxNominatorRewardedPerValidator as u32)?.toNumber() || 64),
+      type: 'force'
     }),
     [api]
   );
@@ -73,7 +90,7 @@ function PayButton ({ className, isAll, isDisabled, payout }: Props): React.Reac
     );
   }, [api, payout]);
 
-  const isPayoutEmpty = !payout || (Array.isArray(payout) && payout.length === 0);
+  const isPayoutEmpty = !payout || (!Array.isArray(payout) && !payout.eras.some((e) => !e.isClaimed)) || (Array.isArray(payout) && payout.some((p) => !p.eras.some((e) => !e.isClaimed))) || (Array.isArray(payout) && payout.length === 0);
 
   return (
     <>

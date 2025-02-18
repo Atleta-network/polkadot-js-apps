@@ -1,4 +1,4 @@
-// Copyright 2017-2023 @polkadot/app-preimages authors & contributors
+// Copyright 2017-2025 @polkadot/app-preimages authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { HashState } from './types.js';
@@ -40,7 +40,7 @@ function Add ({ className, imageHash }: Props): React.ReactElement<Props> {
                 label={t('send from account')}
                 labelExtra={
                   <Available
-                    label={<span className='label'>{t('transferrable')}</span>}
+                    label={<span className='label'>{t('transferable')}</span>}
                     params={accountId}
                   />
                 }

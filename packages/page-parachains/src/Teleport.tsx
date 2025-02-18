@@ -1,4 +1,4 @@
-// Copyright 2017-2023 @polkadot/app-parachains authors & contributors
+// Copyright 2017-2025 @polkadot/app-parachains authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { SubmittableExtrinsicFunction } from '@polkadot/api/types';
@@ -139,7 +139,7 @@ function Teleport ({ onClose }: Props): React.ReactElement<Props> | null {
             label={t('send from account')}
             labelExtra={
               <Available
-                label={t('transferrable')}
+                label={t('transferable')}
                 params={senderId}
               />
             }

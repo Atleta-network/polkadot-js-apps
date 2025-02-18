@@ -1,4 +1,4 @@
-// Copyright 2017-2023 @polkadot/app-contracts authors & contributors
+// Copyright 2017-2025 @polkadot/app-contracts authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { SubmittableExtrinsic } from '@polkadot/api/types';
@@ -128,7 +128,7 @@ function Deploy ({ codeHash, constructorIndex = 0, onClose, setConstructorIndex 
           label={t('deployment account')}
           labelExtra={
             <Available
-              label={t('transferrable')}
+              label={t('transferable')}
               params={accountId}
             />
           }

@@ -1,4 +1,4 @@
-// Copyright 2017-2023 @polkadot/apps-config authors & contributors
+// Copyright 2017-2025 @polkadot/apps-config authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { TFunction, TOptions } from '../types.js';
@@ -6,7 +6,8 @@ import type { LinkOption } from './types.js';
 
 import { createCustom, createDev, createOwn } from './development.js';
 import { prodChains, prodRelayKusama, prodRelayPolkadot } from './production.js';
-import { testChains, testRelayRococo, testRelayWestend } from './testing.js';
+import { testChains, testRelayWestend } from './testing.js';
+import { testRelayPaseo } from './testingRelayPaseo.js';
 import { expandEndpoints } from './util.js';
 
 export { CUSTOM_ENDPOINT_KEY } from './development.js';

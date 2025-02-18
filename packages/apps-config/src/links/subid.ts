@@ -1,4 +1,4 @@
-// Copyright 2017-2023 @polkadot/apps-config authors & contributors
+// Copyright 2017-2025 @polkadot/apps-config authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { BN } from '@polkadot/util';
@@ -18,7 +18,7 @@ export const SubId: ExternalDef = {
     ChainX: 'chainx',
     'Composable Finance': 'composable',
     Edgeware: 'edgeware',
-    HydraDX: 'hydradx',
+    Hydration: 'hydration',
     Interlay: 'interlay',
     InvArch: 'invarch',
     'KILT Spiritnet': 'kilt',

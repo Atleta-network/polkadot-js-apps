@@ -1,4 +1,4 @@
-// Copyright 2017-2023 @polkadot/apps-config authors & contributors
+// Copyright 2017-2025 @polkadot/apps-config authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { BN } from '@polkadot/util';
@@ -22,6 +22,7 @@ export interface LinkPath {
 
   // governance 2
   fellowshipReferenda?: string;
+  ambassadorReferenda?: string;
   rankedPolls?: string;
   referenda?: string;
 }

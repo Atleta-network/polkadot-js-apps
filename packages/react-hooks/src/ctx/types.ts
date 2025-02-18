@@ -1,6 +1,7 @@
-// Copyright 2017-2023 @polkadot/react-hooks authors & contributors
+// Copyright 2017-2025 @polkadot/react-hooks authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
+import type { Blockchain } from '@acala-network/chopsticks-core';
 import type { ApiPromise } from '@polkadot/api';
 import type { SubmittableExtrinsicFunction } from '@polkadot/api/promise/types';
 import type { HeaderExtended } from '@polkadot/api-derive/types';
@@ -8,11 +9,14 @@ import type { LinkOption } from '@polkadot/apps-config/endpoints/types';
 import type { InjectedExtension } from '@polkadot/extension-inject/types';
 import type { ProviderStats } from '@polkadot/rpc-provider/types';
 import type { BlockNumber, EventRecord } from '@polkadot/types/interfaces';
+import type { BN } from '@polkadot/util';
+import type { AssetInfoComplete } from '../types.js';
 
 export interface ApiState {
   apiDefaultTx: SubmittableExtrinsicFunction;
   apiDefaultTxSudo: SubmittableExtrinsicFunction;
   chainSS58: number;
+  fork: Blockchain | null;
   hasInjectedAccounts: boolean;
   isApiReady: boolean;
   isDevelopment: boolean;
@@ -28,7 +32,11 @@ export interface ApiProps extends ApiState {
   api: ApiPromise;
   apiEndpoint: LinkOption | null;
   apiError: string | null;
+  apiIdentity: ApiPromise;
+  apiCoretime: ApiPromise;
+  enableIdentity: boolean;
   apiRelay: ApiPromise | null;
+  apiSystemPeople: ApiPromise | null;
   apiUrl?: string;
   createLink: (path: string, apiUrl?: string) => string;
   extensions?: InjectedExtension[];
@@ -36,6 +44,7 @@ export interface ApiProps extends ApiState {
   isApiInitialized: boolean;
   isElectron: boolean;
   isWaitingInjected: boolean;
+  isLocalFork?: boolean;
 }
 
 export interface Accounts {
@@ -57,6 +66,13 @@ export interface Addresses {
 export interface ApiStats {
   stats: ProviderStats;
   when: number;
+}
+
+export interface PayWithAsset {
+  isDisabled: boolean;
+  assetOptions: {text: string, value: string}[];
+  onChange: (assetId: BN, cb?: () => void) => void;
+  selectedFeeAsset: AssetInfoComplete | null;
 }
 
 export interface BlockAuthors {
