@@ -1,5 +1,261 @@
 # CHANGELOG
 
+## 0.160.1 July 7, 2025
+
+Contributed:
+
+- Fix radiumblock bifrost endpoint ([#11642](https://github.com/polkadot-js/apps/pull/11642)) (Thanks to https://github.com/TomatoAres)
+- Polkadex updated end point ([#11635](https://github.com/polkadot-js/apps/pull/11635)) (Thanks to https://github.com/charanks030)
+- Updated Onfinality endpoints ([#11647](https://github.com/polkadot-js/apps/pull/11647)) (Thanks to https://github.com/FiveKG)
+- docs: fix dead link in apps-config/README.md ([#11672](https://github.com/polkadot-js/apps/pull/11672)) (Thanks to https://github.com/seun556)
+- Added onfinality endpoints ([#11664](https://github.com/polkadot-js/apps/pull/11664)) (Thanks to https://github.com/FiveKG)
+- chore: fix spelling issues ([#11656](https://github.com/polkadot-js/apps/pull/11656)) (Thanks to https://github.com/Bvegas882)
+
+
+Changes:
+
+- Improve regex for weight formatting in formatMeta function ([#11640](https://github.com/polkadot-js/apps/pull/11640))
+- fix: disable unreachable endpoints ([#11644](https://github.com/polkadot-js/apps/pull/11644) [#11658](https://github.com/polkadot-js/apps/pull/11658))
+- Preserve referenda with missing info during grouping ([#11651](https://github.com/polkadot-js/apps/pull/11651))
+- Upgraded polkadot dependencies ([#11676](https://github.com/polkadot-js/apps/pull/11676))
+
+
+
+## 0.159.1 Jun 19, 2025
+
+Contributed:
+
+- fix: disable unreachable endpoints ([#11612](https://github.com/polkadot-js/apps/pull/11612) [#11626](https://github.com/polkadot-js/apps/pull/11626)) (Thanks to https://github.com/rajk93)
+- Add passet-hub Paseo endpoint by IBP ([#11618](https://github.com/polkadot-js/apps/pull/11618)) (Thanks to https://github.com/miloskriz)
+- Enhance BlockByHash with next block navigation and copy functionality ([#11614](https://github.com/polkadot-js/apps/pull/11614)) (Thanks to https://github.com/rajk93)
+- Clean up and renaming of Dwellir endpoints ([#11609](https://github.com/polkadot-js/apps/pull/11609)) (Thanks to https://github.com/Maharacha)
+- Update Mandala testnet config ([#11621](https://github.com/polkadot-js/apps/pull/11621)) (Thanks to https://github.com/fewForce)
+- Adds Tansi ([#11636](https://github.com/polkadot-js/apps/pull/11636)) (Thanks to https://github.com/albertov19)
+- update frequency svgs (mainnet and testnet paseo). update ui colors. ([#11624](https://github.com/polkadot-js/apps/pull/11624)) (Thanks to https://github.com/claireclark1)
+
+
+Changes:
+
+- Handle External URL Navigation in Electron App ([#11630](https://github.com/polkadot-js/apps/pull/11630))
+- Add security headers to disallow iframe embedding ([#11632](https://github.com/polkadot-js/apps/pull/11632))
+- Staking Next Page ([#11483](https://github.com/polkadot-js/apps/pull/11483))
+- Upgraded polkadot dependencies ([#11639](https://github.com/polkadot-js/apps/pull/11639))
+
+
+## 0.158.1 Jun 6, 2025
+
+Contributed:
+
+- Re-enable Kabocha RPC (JelliedOwl) ([#11599](https://github.com/polkadot-js/apps/pull/11599)) (Thanks to https://github.com/JelliedOwl)
+- NFTMart is available ([#11606](https://github.com/polkadot-js/apps/pull/11606)) (Thanks to https://github.com/blackjooohn)
+
+
+Changes:
+
+- Move appsVersion initialization inside component ([#11600](https://github.com/polkadot-js/apps/pull/11600))
+- Upgraded polkadot dependencies ([#11611](https://github.com/polkadot-js/apps/pull/11611))
+
+
+## 0.157.1 Jun 2, 2025
+
+Contributed:
+
+- Add ZeitgeistPM OnFinality provider to production relay polkadot endpoints ([#11558](https://github.com/polkadot-js/apps/pull/11558)) (Thanks to https://github.com/Chralt98)
+- Updates Dancebox for Dancelight ([#11559](https://github.com/polkadot-js/apps/pull/11559)) (Thanks to https://github.com/albertov19)
+- Update jamton definitions ([#11538](https://github.com/polkadot-js/apps/pull/11538)) (Thanks to https://github.com/alexxxkny)
+- chore: display prices as full number on sales page ([#11554](https://github.com/polkadot-js/apps/pull/11554)) (Thanks to https://github.com/rajk93)
+- chore: re-enable rpc3 for Pop Network ([#11571](https://github.com/polkadot-js/apps/pull/11571)) (Thanks to https://github.com/al3mart)
+- Auto suggestion for proxy based on transaction type ([#11579](https://github.com/polkadot-js/apps/pull/11579)) (Thanks to https://github.com/rajk93)
+- chore(passet-hub): add PAssetHub endpoint to Paseo ([#11591](https://github.com/polkadot-js/apps/pull/11591)) (Thanks to https://github.com/al3mart)
+
+
+Changes:
+
+- Improve input conversion logic in BaseBytes component ([#11562](https://github.com/polkadot-js/apps/pull/11562))
+- Small fix for non-showing tag for Reservation type on Coretime Broker - Coretime Chain ([#11567](https://github.com/polkadot-js/apps/pull/11567))
+- Disable unreachable endpoints ([#11574](https://github.com/polkadot-js/apps/pull/11574) [#11590](https://github.com/polkadot-js/apps/pull/11590))
+- Improve amount error calculation by considering OpenGov-related locks ([#11578](https://github.com/polkadot-js/apps/pull/11578))
+- Enhance Preimage Page with Decodable Call Link ([#11570](https://github.com/polkadot-js/apps/pull/11570))
+- Enable Manual Address in Account Input When No Accounts Are Present ([#11583](https://github.com/polkadot-js/apps/pull/11583))
+- Display Basic Chain Info, Apps, API, and Metadata in Settings ([#11584](https://github.com/polkadot-js/apps/pull/11584))
+- Upgraded polkadot dependencies ([#11597](https://github.com/polkadot-js/apps/pull/11597))
+
+
+## 0.156.1 May 16, 2025
+
+Contributed:
+
+- chore: update Subscan links for Paseo chains ([#11535](https://github.com/polkadot-js/apps/pull/11535)) (Thanks to https://github.com/carlhong)
+- Fix typos in translation JSON files ([#11536](https://github.com/polkadot-js/apps/pull/11536)) (Thanks to https://github.com/seun556)
+- Add Kreivo testnet endpoint to testingRelayPaseo.ts ([#11519](https://github.com/polkadot-js/apps/pull/11519)) (Thanks to https://github.com/pandres95)
+- fix: update upload menu background color to use theme variable ([#11548](https://github.com/polkadot-js/apps/pull/11548)) (Thanks to https://github.com/rajk93)
+- Update peerplays types bundle ([#11550](https://github.com/polkadot-js/apps/pull/11550)) (Thanks to https://github.com/vampik33)
+- chore: reenable peregrine RPC ([#11557](https://github.com/polkadot-js/apps/pull/11557)) (Thanks to https://github.com/ggera)
+- fix: multisig data disappears while signing multiple multisig tx's from same account ([#11552](https://github.com/polkadot-js/apps/pull/11552)) (Thanks to https://github.com/rajk93)
+
+
+Changes:
+
+- Import and export of addresses to the My Accounts Tab ([#11507](https://github.com/polkadot-js/apps/pull/11507))
+- Disable unreachable endpoints ([#11532](https://github.com/polkadot-js/apps/pull/11532) [#11545](https://github.com/polkadot-js/apps/pull/11545))
+- Refactor: Vote component ([#11540](https://github.com/polkadot-js/apps/pull/11540))
+- Update delegated account input type ([#11553](https://github.com/polkadot-js/apps/pull/11553))
+- Upgraded polkadot dependencies ([#11556](https://github.com/polkadot-js/apps/pull/11556))
+
+
+## 0.155.1 May 5, 2025
+
+Contributed:
+
+- Kusama People Chain -> Helixstreet RPC Endpoint added ([#11497](https://github.com/polkadot-js/apps/pull/11497)) (Thanks to https://github.com/helixstreet)
+- Add XODE endpoint for Polkadot ([#11486](https://github.com/polkadot-js/apps/pull/11486)) (Thanks to https://github.com/ArneilPaulPolican)
+- Added onfinality 4 endpoints ([#11494](https://github.com/polkadot-js/apps/pull/11494)) (Thanks to https://github.com/FiveKG)
+- Add DataHaven Stagenet to Ethereum Chains ([#11501](https://github.com/polkadot-js/apps/pull/11501)) (Thanks to https://github.com/stiiifff)
+- Add IBP endpoint to Xcavate Polkadot ([#11503](https://github.com/polkadot-js/apps/pull/11503)) (Thanks to https://github.com/miloskriz)
+- Stakeworld endpoints for polkadot coretime and polkadot people ([#11505](https://github.com/polkadot-js/apps/pull/11505)) (Thanks to https://github.com/stakeworld)
+- Added Dwellir endpoints for Coretime and People on Polkadot and Kusama ([#11508](https://github.com/polkadot-js/apps/pull/11508)) (Thanks to https://github.com/Maharacha)
+- fix: change Xode RPC Endpoint under Polkadot ([#11512](https://github.com/polkadot-js/apps/pull/11512)) (Thanks to https://github.com/ArneilPaulPolican)
+- Update productionRelayPolkadot.ts ([#11509](https://github.com/polkadot-js/apps/pull/11509)) (Thanks to https://github.com/dcolley)
+- Add IBP2 to PJS XCavate endpoint ([#11514](https://github.com/polkadot-js/apps/pull/11514)) (Thanks to https://github.com/senseless)
+- Restore Kippu's node in Kreivo provider ([#11518](https://github.com/polkadot-js/apps/pull/11518)) (Thanks to https://github.com/pandres95)
+- add: Zeeve RPC Endpoint for Xode Polkadot ([#11516](https://github.com/polkadot-js/apps/pull/11516)) (Thanks to https://github.com/ArneilPaulPolican)
+- Remove support to parallel ([#11525](https://github.com/polkadot-js/apps/pull/11525)) (Thanks to https://github.com/miloskriz)
+
+
+Changes:
+
+- Disable unreachable endpoints ([#11496](https://github.com/polkadot-js/apps/pull/11496) [#11515](https://github.com/polkadot-js/apps/pull/11515) [#11529](https://github.com/polkadot-js/apps/pull/11529))
+- Add Deregister ParaId component and integrate into Actions ([#11499](https://github.com/polkadot-js/apps/pull/11499))
+- Displaying the commission set by a nomination pool on the staking pools page ([#11517](https://github.com/polkadot-js/apps/pull/11517))
+
+
+## 0.154.1 Apr 18, 2025
+
+Contributed:
+
+- [LAOS] update bootnodes and hosting name ([#11452](https://github.com/polkadot-js/apps/pull/11452)) (Thanks to https://github.com/asiniscalchi)
+- chore: fixed bug on chart and ui issue in sale page ([#11354](https://github.com/polkadot-js/apps/pull/11354)) (Thanks to https://github.com/Ernesto-tha-great)
+- adding xcav into polkadot ([#11463](https://github.com/polkadot-js/apps/pull/11463)) (Thanks to https://github.com/ganesh1997oli)
+- fix: add logo image of collectives ([#11467](https://github.com/polkadot-js/apps/pull/11467)) (Thanks to https://github.com/quinn-gaoo)
+- Update zkVerify testnet endpoint and name ([#11472](https://github.com/polkadot-js/apps/pull/11472)) (Thanks to https://github.com/drgora)
+- add tscs network ([#11438](https://github.com/polkadot-js/apps/pull/11438)) (Thanks to https://github.com/weimeme)
+
+
+Changes:
+
+- Feedback/#11253 ([#11304](https://github.com/polkadot-js/apps/pull/11304))
+- Enable Extrinsic Page Access Without Accounts ([#11441](https://github.com/polkadot-js/apps/pull/11441))
+- Disable unreachable endpoints ([#11461](https://github.com/polkadot-js/apps/pull/11461) [#11478](https://github.com/polkadot-js/apps/pull/11478))
+- Added warning message for XCM (teleport) ([#11462](https://github.com/polkadot-js/apps/pull/11462))
+- Suspended candidates query ([#11469](https://github.com/polkadot-js/apps/pull/11469))
+- Improved behavior for dissolving crowdloan ([#11470](https://github.com/polkadot-js/apps/pull/11470))
+- Fix External Links ([#11485](https://github.com/polkadot-js/apps/pull/11485))
+- Upgraded polkadot dependencies ([#11489](https://github.com/polkadot-js/apps/pull/11489))
+
+
+## 0.153.1 Apr 3, 2025
+
+Contributed:
+
+- Update logo for Robonomics parachains ([#11318](https://github.com/polkadot-js/apps/pull/11318)) (Thanks to https://github.com/PavelSheremetev)
+- Fix multisig when the proxy pallet is not available ([#11435](https://github.com/polkadot-js/apps/pull/11435)) (Thanks to https://github.com/MOZGIII)
+- fix: update 3dpass rpc endpoint ([#11442](https://github.com/polkadot-js/apps/pull/11442)) (Thanks to https://github.com/fedosov)
+- Update Dwellirs Litentry endpoint to Heima ([#11443](https://github.com/polkadot-js/apps/pull/11443)) (Thanks to https://github.com/Maharacha)
+- Update Dwellirs Moonbase endpoint ([#11444](https://github.com/polkadot-js/apps/pull/11444)) (Thanks to https://github.com/Maharacha)
+- Add zkVerify Volta inflation parameters ([#11448](https://github.com/polkadot-js/apps/pull/11448)) (Thanks to https://github.com/drgora)
+
+Changes:
+
+- Export Multisig as JSON ([#11408](https://github.com/polkadot-js/apps/pull/11408))
+- Disable unreachable endpoints ([#11424](https://github.com/polkadot-js/apps/pull/11424) [#11440](https://github.com/polkadot-js/apps/pull/11440))
+- Fix: Multisig calls linked to a proxy account ([#11412](https://github.com/polkadot-js/apps/pull/11412))
+- FIX: Unwanted Errors on Sudo Page When Submitting Calls ([#11426](https://github.com/polkadot-js/apps/pull/11426))
+- Improve signing with multisig proxy ([#11433](https://github.com/polkadot-js/apps/pull/11433))
+- Allow anonymous proxy ([#11450](https://github.com/polkadot-js/apps/pull/11450))
+- Upgraded polkadot dependencies ([#11453](https://github.com/polkadot-js/apps/pull/11453))
+
+
+## 0.152.1 Mar 24, 2025
+
+Contributed:
+
+- Update productionRelayPolkadot.ts - Added Coretime Polkadot endpoint for LuckyFriday.io ([#11363](https://github.com/polkadot-js/apps/pull/11363)) (Thanks to https://github.com/Rbdude25)
+- Update productionRelayKusama.ts - Added Encointer Kusama RPC endpoint for Luckyfriday.io ([#11361](https://github.com/polkadot-js/apps/pull/11361)) (Thanks to https://github.com/Rbdude25)
+- Fix dark mode display hash display result in Fork ([#11378](https://github.com/polkadot-js/apps/pull/11378)) (Thanks to https://github.com/Amity808)
+- Update Heima parachain endpoints ([#11366](https://github.com/polkadot-js/apps/pull/11366)) (Thanks to https://github.com/Kailai-Wang)
+- Update subscan.ts - add heima network ([#11388](https://github.com/polkadot-js/apps/pull/11388)) (Thanks to https://github.com/yakio)
+- Remove the dev notification for 1 month ([#11400](https://github.com/polkadot-js/apps/pull/11400)) (Thanks to https://github.com/wirednkod)
+- Removing Dwellir Bifrost endpoints ([#11399](https://github.com/polkadot-js/apps/pull/11399)) (Thanks to https://github.com/jonathanudd)
+- Updated 6 Dwellir endpoints ([#11407](https://github.com/polkadot-js/apps/pull/11407)) (Thanks to https://github.com/Maharacha)
+- Deleted onfinality polkadex parachain endpoint ([#11409](https://github.com/polkadot-js/apps/pull/11409)) (Thanks to https://github.com/FiveKG)
+- Update Peerplays types bundle ([#11405](https://github.com/polkadot-js/apps/pull/11405)) (Thanks to https://github.com/serkixenos)
+
+
+Changes:
+
+- Fix: Coretime sale page -> purchase transactions subscan url is constructred with start and end blocks = 0 ([#11360](https://github.com/polkadot-js/apps/pull/11360))
+- Disable unreachable endpoints ([#11371](https://github.com/polkadot-js/apps/pull/11371) [#11394](https://github.com/polkadot-js/apps/pull/11394) [#11411](https://github.com/polkadot-js/apps/pull/11411))
+- Refactor: Enhance useOwnEraRewards with staker rewards fetching and event handling ([#11376](https://github.com/polkadot-js/apps/pull/11376))
+- Changed pools warning message ([#11386](https://github.com/polkadot-js/apps/pull/11386))
+- FIX: Fee Asset Selection ([#11397](https://github.com/polkadot-js/apps/pull/11397))
+- Improvement: Multisig Call Data Field ([#11403](https://github.com/polkadot-js/apps/pull/11403))
+- Import & Export Feature for Address Book ([#11383](https://github.com/polkadot-js/apps/pull/11383))
+- Upgraded polkadot deps ([#11420](https://github.com/polkadot-js/apps/pull/11420))
+
+
+## 0.151.1 Mar 6, 2025
+
+Contributed:
+
+- Add light client for LAOS parachain ([#11284](https://github.com/polkadot-js/apps/pull/11284)) (Thanks to https://github.com/asiniscalchi)
+- Update para id and providers ([#11326](https://github.com/polkadot-js/apps/pull/11326)) (Thanks to https://github.com/ganesh1997oli)
+- Add zkVerify Testnet ([#11356](https://github.com/polkadot-js/apps/pull/11356)) (Thanks to https://github.com/DanieleDiBenedetto)
+
+
+Changes:
+
+- Ensure useReferenda doesnt cause a white screen ([#11328](https://github.com/polkadot-js/apps/pull/11328))
+- Improve parameter handling in Option ([#11330](https://github.com/polkadot-js/apps/pull/11330))
+- Maximum transfer value while teleport ([#11332](https://github.com/polkadot-js/apps/pull/11332))
+- Fix Asset Id Parsing ([#11334](https://github.com/polkadot-js/apps/pull/11334))
+- Enhancement: Fee Payment with Sufficient Assets ([#11336](https://github.com/polkadot-js/apps/pull/11336))
+- Enhancement: Improve Fee Token Verification & Asset ID Handling ([#11341](https://github.com/polkadot-js/apps/pull/11341))
+- Disable unreachable endpoints ([#11338](https://github.com/polkadot-js/apps/pull/11338))
+- Fix: Voting on referenda breaks Apps ([#11344](https://github.com/polkadot-js/apps/pull/11344))
+- Improve Address Book Search ([#11350](https://github.com/polkadot-js/apps/pull/11350))
+- Replace `isEmpty` checks with utility function ([#11355](https://github.com/polkadot-js/apps/pull/11355))
+- Ensure safety check on isEmpty ([#11358](https://github.com/polkadot-js/apps/pull/11358))
+- Fix for not showing expires if the chain renewed ([#11353](https://github.com/polkadot-js/apps/pull/11353))
+- Enhance Preimages Page with Improved Usability ([#11342](https://github.com/polkadot-js/apps/pull/11342))
+- Upgraded polkadot deps ([#11365](https://github.com/polkadot-js/apps/pull/11365))
+
+## 0.150.2 Feb 22, 2025
+
+Changes:
+
+- Fix TracksInfo values being undefined and causing a whitescreen ([#11320](https://github.com/polkadot-js/apps/pull/11320))
+
+
+## 0.150.1 Feb 19, 2025
+
+Contributed:
+
+- Add IBP2 as mythos RPC provider ([#11288](https://github.com/polkadot-js/apps/pull/11288)) (Thanks to https://github.com/senseless)
+- Update subsquare and statescan external links ([#11295](https://github.com/polkadot-js/apps/pull/11295)) (Thanks to https://github.com/wliyongfeng)
+- Enable Helixstreet Endpoints ([#11293](https://github.com/polkadot-js/apps/pull/11293)) (Thanks to https://github.com/helixstreet)
+- Rebrand litentry to heima ([#11276](https://github.com/polkadot-js/apps/pull/11276)) (Thanks to https://github.com/Kailai-Wang)
+- Remove Helikon Khala RPC endpoint ([#11301](https://github.com/polkadot-js/apps/pull/11301)) (Thanks to https://github.com/kukabi)
+
+Changes:
+
+- Adding Filters for the Coretime - Overview Tab according to feedback ([#11217](https://github.com/polkadot-js/apps/pull/11217))
+- Fixed Table Spacing in Firefox ([#11287](https://github.com/polkadot-js/apps/pull/11287))
+- Disable unreachable endpoints ([#11286](https://github.com/polkadot-js/apps/pull/11286) [#11303](https://github.com/polkadot-js/apps/pull/11303))
+- Input Number component ([#11275](https://github.com/polkadot-js/apps/pull/11275))
+- Refactor Assets Page <> Improve Non-Native Asset Balance Display ([#11290](https://github.com/polkadot-js/apps/pull/11290))
+- Show Multilocation for Foreign Assets <> Assets Page ([#11306](https://github.com/polkadot-js/apps/pull/11306))
+- Upgraded polkadot dependencies ([#11309](https://github.com/polkadot-js/apps/pull/11309))
+
 ## 0.149.1 Feb 7, 2025
 
 Contributed:
