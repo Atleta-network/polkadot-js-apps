@@ -8,7 +8,7 @@ on:
 jobs:
   build:
 
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
@@ -32,8 +32,8 @@ jobs:
 
     - name: Copy Files to Server
       run: |
-        scp artifacts/sportchain-explorer.tar ${{ secrets.EXPLORER_USERNAME}}@${{ secrets.EXPLORER_HOST }}:/sportchain/
-        scp docker/docker-compose.yml ${{ secrets.EXPLORER_USERNAME}}@${{ secrets.EXPLORER_HOST }}:/sportchain/docker-compose.yml
+        scp artifacts/sportchain-explorer.tar ${{ secrets.EXPLORER_USERNAME}}@${{ secrets.EXPLORER_HOST }}:~/sportchain/explorer
+        scp docker/docker-compose.yml ${{ secrets.EXPLORER_USERNAME}}@${{ secrets.EXPLORER_HOST }}:~/sportchain/explorer/docker-compose.yml
 
     - name: SSH into Server and Deploy
       uses: appleboy/ssh-action@v1.0.0
@@ -42,6 +42,6 @@ jobs:
         username: ${{ secrets.EXPLORER_USERNAME }}
         key: ${{ secrets.EXPLORER_PRIVATE_KEY }}
         script: |
-          cd /sportchain
+          cd ~/sportchain/explorer
           docker load --input sportchain-explorer.tar
           docker compose up --detach

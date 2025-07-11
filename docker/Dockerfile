@@ -31,12 +31,10 @@ RUN apk add --no-cache bash; chmod +x env.sh
 COPY docker/nginx /etc/nginx
 COPY --from=builder /apps/packages/apps/build /usr/share/nginx/html
 
-COPY docker/nginx-container/check_ssl.sh /
-
 ENTRYPOINT ["/bin/bash", "-c"]
 
 EXPOSE 80
 
 STOPSIGNAL SIGQUIT
 
-CMD ["/check_ssl.sh & /usr/share/nginx/html/env.sh && exec /docker-entrypoint.sh nginx -g 'daemon off;'"]
+CMD ["/usr/share/nginx/html/env.sh && exec /docker-entrypoint.sh nginx -g 'daemon off;'"]

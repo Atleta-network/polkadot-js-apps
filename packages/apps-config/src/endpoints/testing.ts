@@ -24,18 +24,7 @@ export const testChains: Omit<EndpointOption, 'teleport'>[] = [
     },
     text: 'Atleta Testnet v2',
     ui: {
-      color: '#00ffcc',
-      logo: nodesZeroSVG
-    }
-  },
-  {
-    info: 'Atleta',
-    providers: {
-      'Node #1': 'wss://testnet-rpc.atleta.network:9944'
-    },
-    text: 'Atleta Olympia',
-    ui: {
-      color: '#000000'
+      color: '#000000',
     }
   },
   // {
