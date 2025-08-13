@@ -59,20 +59,20 @@ jobs:
         SERVICE_NAME: ${{ vars.SERVICE_NAME }}
         SERVICE_TAG: ${{ github.sha }}
         DOCKER_COMPOSE_FILE: ${{ vars.DOCKER_COMPOSE_FILE }}
+        BASE_PATH: ${{ secrets.BASE_PATH }}
       with:
         host: ${{ secrets.HOST_1 }}
         username: ${{ secrets.HOST_1_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        envs: CI_REGISTRY,CI_REGISTRY_REPO,SERVICE_NAME,SERVICE_TAG,DOCKER_COMPOSE_FILE
+        envs: CI_REGISTRY,CI_REGISTRY_REPO,SERVICE_NAME,SERVICE_TAG,DOCKER_COMPOSE_FILE,BASE_PATH
         script: |
-          for var in CI_REGISTRY CI_REGISTRY_REPO SERVICE_NAME SERVICE_TAG DOCKER_COMPOSE_FILE; do
+          for var in CI_REGISTRY CI_REGISTRY_REPO SERVICE_NAME SERVICE_TAG DOCKER_COMPOSE_FILE,BASE_PATH; do
             if [ -z "${!var}" ]; then
               echo "Error: Environment variable ${var} is not set."
               exit 1
             fi
           done
 
-          BASE_PATH="~/sportchain/explorer"
           IMAGE="${CI_REGISTRY}/${CI_REGISTRY_REPO}/${SERVICE_NAME}:${SERVICE_TAG}"
           CONTAINER="${SERVICE_NAME}"
 
