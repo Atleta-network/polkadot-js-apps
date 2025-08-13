@@ -87,4 +87,4 @@ jobs:
           update_docker_compose "${IMAGE}" "${DOCKER_COMPOSE_FILE}"
 
           docker compose up -d --force-recreate "${CONTAINER}"
-          docker exec -it nginx nginx -s reload          
+          docker exec nginx nginx -s reload || true
