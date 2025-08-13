@@ -15,33 +15,76 @@ jobs:
       with:
         submodules: "recursive"
 
-    - name: Create Image Tarball for Explorer
-      run: |
-        mkdir -p artifacts/
-        docker build --tag sportchain-explorer --file docker/Dockerfile .
-        docker save --output artifacts/sportchain-explorer.tar sportchain-explorer
+    - name: Build Docker image
+      uses: docker/setup-buildx-action@v3
 
-    - name: Set up SSH
-      run: |
-        mkdir -p ~/.ssh/
-        touch ~/.ssh/known_hosts
-        ssh-keyscan ${{ secrets.EXPLORER_HOST }} >> ~/.ssh/known_hosts
-        echo "${{ secrets.EXPLORER_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        eval $(ssh-agent)
-
-    - name: Copy Files to Server
-      run: |
-        scp artifacts/sportchain-explorer.tar ${{ secrets.EXPLORER_USERNAME}}@${{ secrets.EXPLORER_HOST }}:~/sportchain/explorer
-        scp docker/docker-compose.yml ${{ secrets.EXPLORER_USERNAME}}@${{ secrets.EXPLORER_HOST }}:~/sportchain/explorer/docker-compose.yml
-
-    - name: SSH into Server and Deploy
-      uses: appleboy/ssh-action@v1.0.0
+    - name: Log in to Docker Registry
+      uses: docker/login-action@v2
       with:
-        host: ${{ secrets.EXPLORER_HOST }}
-        username: ${{ secrets.EXPLORER_USERNAME }}
-        key: ${{ secrets.EXPLORER_PRIVATE_KEY }}
+        registry: ${{ secrets.CI_REGISTRY }}
+        username: ${{ secrets.CI_REGISTRY_USER }}
+        password: ${{ secrets.CI_REGISTRY_PASSWORD }}
+
+    - name: Build and release Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./
+        file: ./Dockerfile
+        push: true
+        no-cache: true
+        tags: |
+          ${{ secrets.CI_REGISTRY }}/${{ secrets.CI_REGISTRY_REPO }}/${{ vars.SERVICE_NAME }}:${{ github.sha }}
+          ${{ secrets.CI_REGISTRY }}/${{ secrets.CI_REGISTRY_REPO }}/${{ vars.SERVICE_NAME }}:latest
+
+    - name: Check if Image Exists
+      env:
+        CI_REGISTRY: ${{ secrets.CI_REGISTRY }}
+        CI_REGISTRY_REPO: ${{ secrets.CI_REGISTRY_REPO }}
+        SERVICE_NAME: ${{ vars.SERVICE_NAME }}
+        SERVICE_TAG: ${{ github.sha }}
+      run: |
+        IMAGE="${CI_REGISTRY}/${CI_REGISTRY_REPO}/${SERVICE_NAME}:${SERVICE_TAG}"
+        if docker manifest inspect $IMAGE > /dev/null; then
+          echo "Image exists"
+        else
+          echo "Image does not exist"
+          exit 1
+        fi
+
+    - name: Deploy
+      uses: appleboy/ssh-action@v1.0.0
+      env:
+        CI_REGISTRY: ${{ secrets.CI_REGISTRY }}
+        CI_REGISTRY_REPO: ${{ secrets.CI_REGISTRY_REPO }}
+        SERVICE_NAME: ${{ vars.SERVICE_NAME }}
+        SERVICE_TAG: ${{ github.sha }}
+        DOCKER_COMPOSE_FILE: ${{ vars.DOCKER_COMPOSE_FILE }}
+      with:
+        host: ${{ secrets.HOST_1 }}
+        username: ${{ secrets.HOST_1_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        envs: CI_REGISTRY,CI_REGISTRY_REPO,SERVICE_NAME,SERVICE_TAG,DOCKER_COMPOSE_FILE
         script: |
-          cd ~/sportchain/explorer
-          docker load --input sportchain-explorer.tar
-          docker compose up --detach
+          for var in CI_REGISTRY CI_REGISTRY_REPO SERVICE_NAME SERVICE_TAG DOCKER_COMPOSE_FILE; do
+            if [ -z "${!var}" ]; then
+              echo "Error: Environment variable ${var} is not set."
+              exit 1
+            fi
+          done
+
+          BASE_PATH="~/sportchain/explorer"
+          IMAGE="${CI_REGISTRY}/${CI_REGISTRY_REPO}/${SERVICE_NAME}:${SERVICE_TAG}"
+          CONTAINER="${SERVICE_NAME}"
+
+          update_docker_compose() {
+            local image="$1"
+            local compose_file="$2"
+            sed -i "s|image: .*/${SERVICE_NAME}:.*|image: ${image}|" "${compose_file}"
+          }
+          
+          cd "${BASE_PATH}" || exit 1
+          
+          update_docker_compose "${IMAGE}" "${DOCKER_COMPOSE_FILE}"
+
+          docker compose up -d --force-recreate "${CONTAINER}"
+          docker exec -it nginx nginx -s reload          
