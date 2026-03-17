@@ -1,0 +1,221 @@
+name: Deploy service
+
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+    inputs:
+      service:
+        description: "Service to deploy"
+        required: true
+        type: choice
+        options:
+          - polkadot-js-apps
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
+      sha:
+        description: "Commit SHA for deploy/rollback (default: event SHA)"
+        required: false
+        default: ""
+      confirm_prod:
+        description: "Type DEPLOY_PROD to confirm prod rollout (required only for prod)"
+        required: false
+        default: ""
+  repository_dispatch:
+    types: [Deploy]
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.resolve.outputs.should_run }}
+      service_id: ${{ steps.resolve.outputs.service_id }}
+      environment: ${{ steps.resolve.outputs.environment }}
+    steps:
+      - name: Resolve deploy settings
+        id: resolve
+        shell: bash
+        env:
+          INPUT_SERVICE: ${{ github.event.inputs.service || github.event.client_payload.service || '' }}
+          INPUT_ENVIRONMENT: ${{ github.event.inputs.environment || github.event.client_payload.environment || '' }}
+          EVENT_NAME: ${{ github.event_name }}
+          DISPATCH_ACTION: ${{ github.event.action || '' }}
+        run: |
+          set -euo pipefail
+
+          SERVICE_ID="polkadot-js-apps"
+          TARGET_ENV=""
+
+          if [ "${EVENT_NAME}" = "workflow_dispatch" ]; then
+            if [ -z "${INPUT_SERVICE}" ]; then
+              echo "Input service is required for workflow_dispatch."
+              exit 1
+            fi
+
+            case "${INPUT_SERVICE}" in
+              polkadot-js-apps)
+                SERVICE_ID="${INPUT_SERVICE}"
+                ;;
+              *)
+                echo "Unknown service: ${INPUT_SERVICE}"
+                exit 1
+                ;;
+            esac
+
+            if [ -z "${INPUT_ENVIRONMENT}" ]; then
+              echo "Input environment is required for workflow_dispatch."
+              exit 1
+            fi
+
+            TARGET_ENV="${INPUT_ENVIRONMENT}"
+          elif [ "${EVENT_NAME}" = "repository_dispatch" ]; then
+            case "${DISPATCH_ACTION}" in
+              Deploy)
+                SERVICE_ID="${INPUT_SERVICE:-polkadot-js-apps}"
+                TARGET_ENV="${INPUT_ENVIRONMENT}"
+                ;;
+              *)
+                echo "should_run=false" >> "$GITHUB_OUTPUT"
+                exit 0
+                ;;
+            esac
+          else
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          case "${TARGET_ENV}" in
+            dev|prod) ;;
+            *)
+              echo "Unknown target environment: ${TARGET_ENV}"
+              exit 1
+              ;;
+          esac
+
+          case "${SERVICE_ID}" in
+            polkadot-js-apps) ;;
+            *)
+              echo "Unknown service: ${SERVICE_ID}"
+              exit 1
+              ;;
+          esac
+
+          if [ "${EVENT_NAME}" = "repository_dispatch" ] && [ "${TARGET_ENV}" = "prod" ]; then
+            echo "Prod deploy is manual-only via workflow_dispatch."
+            exit 1
+          fi
+
+          echo "should_run=true" >> "$GITHUB_OUTPUT"
+          echo "service_id=${SERVICE_ID}" >> "$GITHUB_OUTPUT"
+          echo "environment=${TARGET_ENV}" >> "$GITHUB_OUTPUT"
+
+  deployment:
+    needs:
+      - prepare
+    if: needs.prepare.outputs.should_run == 'true'
+    runs-on: ubuntu-latest
+    environment: ${{ needs.prepare.outputs.environment }}
+
+    steps:
+      - name: Checkout repository for local actions
+        uses: actions/checkout@v4
+
+      - name: Validate explicit prod confirmation
+        if: github.event_name == 'workflow_dispatch' && needs.prepare.outputs.environment == 'prod'
+        shell: bash
+        run: |
+          if [ "${{ github.event.inputs.confirm_prod }}" != "DEPLOY_PROD" ]; then
+            echo "Prod deploy requires explicit confirmation."
+            echo "Re-run workflow_dispatch and set confirm_prod=DEPLOY_PROD"
+            exit 1
+          fi
+
+      - name: Resolve SERVICE_TAG
+        uses: ./.github/actions/resolve-service-tag
+        with:
+          sha: ${{ github.event.inputs.sha || '' }}
+
+      - name: Log deploy settings
+        run: |
+          echo "Service id: ${{ needs.prepare.outputs.service_id }}"
+          echo "Environment: ${{ needs.prepare.outputs.environment }}"
+          echo "Deploying image with SHA: ${{ env.SERVICE_TAG }}"
+
+      - name: Resolve deploy settings
+        shell: bash
+        env:
+          DOCKER_COMPOSE_FILE: ${{ vars.DOCKER_COMPOSE_FILE }}
+          BASE_PATH: ${{ secrets.BASE_PATH }}
+        run: |
+          set -euo pipefail
+
+          SERVICE_NAME="${{ vars.SERVICE_NAME }}"
+          CONTAINER_NAME="${{ vars.CONTAINER_NAME }}"
+
+          if [ -z "${SERVICE_NAME}" ]; then
+            SERVICE_NAME="sportchain-explorer"
+          fi
+
+          if [ -z "${CONTAINER_NAME}" ]; then
+            CONTAINER_NAME="${SERVICE_NAME}"
+          fi
+
+          if [ -z "${DOCKER_COMPOSE_FILE}" ]; then
+            echo "DOCKER_COMPOSE_FILE is required in GitHub Variables."
+            exit 1
+          fi
+
+          if [ -z "${BASE_PATH}" ]; then
+            echo "BASE_PATH is required in GitHub Secrets."
+            exit 1
+          fi
+
+          echo "EFFECTIVE_SERVICE_NAME=${SERVICE_NAME}" >> "$GITHUB_ENV"
+          echo "EFFECTIVE_CONTAINER_NAME=${CONTAINER_NAME}" >> "$GITHUB_ENV"
+          echo "EFFECTIVE_BASE_PATH=${BASE_PATH}" >> "$GITHUB_ENV"
+          echo "EFFECTIVE_DOCKER_COMPOSE_FILE=${DOCKER_COMPOSE_FILE}" >> "$GITHUB_ENV"
+          echo "IMAGE_NAME=${SERVICE_NAME}" >> "$GITHUB_ENV"
+
+      - name: Checkout repository at selected commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.ref || env.SERVICE_TAG }}
+
+      - name: Log in to Docker Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.CI_REGISTRY }}
+          username: ${{ secrets.CI_REGISTRY_USER }}
+          password: ${{ secrets.CI_REGISTRY_PASSWORD }}
+
+      - name: Check if image exists
+        uses: ./.github/actions/check-image-exists
+        with:
+          registry: ${{ secrets.CI_REGISTRY }}
+          registry_repo: ${{ secrets.CI_REGISTRY_REPO }}
+          service_name: ${{ env.EFFECTIVE_SERVICE_NAME }}
+          service_tag: ${{ env.SERVICE_TAG }}
+          image_name: ${{ env.IMAGE_NAME }}
+
+      - name: Deploy service
+        uses: ./.github/actions/deploy-over-ssh
+        with:
+          host: ${{ secrets.HOST_1 }}
+          username: ${{ secrets.HOST_1_USERNAME }}
+          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
+          registry: ${{ secrets.CI_REGISTRY }}
+          registry_repo: ${{ secrets.CI_REGISTRY_REPO }}
+          service_name: ${{ env.EFFECTIVE_SERVICE_NAME }}
+          service_tag: ${{ env.SERVICE_TAG }}
+          docker_compose_file: ${{ env.EFFECTIVE_DOCKER_COMPOSE_FILE }}
+          base_path: ${{ env.EFFECTIVE_BASE_PATH }}
+          container_name: ${{ env.EFFECTIVE_CONTAINER_NAME }}
+          image_name: ${{ env.IMAGE_NAME }}
+          post_deploy_sleep_seconds: "10"
+          reload_nginx: "true"

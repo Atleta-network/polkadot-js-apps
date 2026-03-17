@@ -1,0 +1,107 @@
+name: Deploy over SSH
+description: Update compose image and restart the service over SSH.
+inputs:
+  host:
+    description: SSH host for deployment.
+    required: true
+  username:
+    description: SSH username.
+    required: true
+  ssh_private_key:
+    description: SSH private key.
+    required: true
+  registry:
+    description: Container registry host.
+    required: true
+  registry_repo:
+    description: Container registry repository or namespace.
+    required: true
+  service_name:
+    description: Service name.
+    required: true
+  service_tag:
+    description: Image tag.
+    required: true
+  docker_compose_file:
+    description: Docker compose file path on host.
+    required: true
+  base_path:
+    description: Base path where compose should run.
+    required: true
+  container_name:
+    description: Optional container name override.
+    required: false
+    default: ""
+  image_name:
+    description: Optional image name override.
+    required: false
+    default: ""
+  post_deploy_sleep_seconds:
+    description: Sleep time after restart.
+    required: false
+    default: "10"
+  reload_nginx:
+    description: Whether to reload nginx after deploy.
+    required: false
+    default: "true"
+runs:
+  using: composite
+  steps:
+    - name: Deploy service
+      uses: appleboy/ssh-action@v1.2.2
+      env:
+        CI_REGISTRY: ${{ inputs.registry }}
+        CI_REGISTRY_REPO: ${{ inputs.registry_repo }}
+        SERVICE_NAME: ${{ inputs.service_name }}
+        SERVICE_TAG: ${{ inputs.service_tag }}
+        DOCKER_COMPOSE_FILE: ${{ inputs.docker_compose_file }}
+        BASE_PATH: ${{ inputs.base_path }}
+        CONTAINER_NAME_OVERRIDE: ${{ inputs.container_name }}
+        IMAGE_NAME_OVERRIDE: ${{ inputs.image_name }}
+        POST_DEPLOY_SLEEP_SECONDS: ${{ inputs.post_deploy_sleep_seconds }}
+        RELOAD_NGINX: ${{ inputs.reload_nginx }}
+      with:
+        host: ${{ inputs.host }}
+        username: ${{ inputs.username }}
+        key: ${{ inputs.ssh_private_key }}
+        envs: CI_REGISTRY,CI_REGISTRY_REPO,SERVICE_NAME,SERVICE_TAG,DOCKER_COMPOSE_FILE,BASE_PATH,CONTAINER_NAME_OVERRIDE,IMAGE_NAME_OVERRIDE,POST_DEPLOY_SLEEP_SECONDS,RELOAD_NGINX
+        script: |
+          set -euo pipefail
+
+          for var in CI_REGISTRY CI_REGISTRY_REPO SERVICE_NAME SERVICE_TAG DOCKER_COMPOSE_FILE BASE_PATH; do
+            if [ -z "${!var}" ]; then
+              echo "Error: Environment variable ${var} is not set."
+              exit 1
+            fi
+          done
+
+          IMAGE_NAME="${IMAGE_NAME_OVERRIDE}"
+          if [ -z "${IMAGE_NAME}" ]; then
+            IMAGE_NAME="${SERVICE_NAME}"
+          fi
+
+          CONTAINER="${CONTAINER_NAME_OVERRIDE}"
+          if [ -z "${CONTAINER}" ]; then
+            CONTAINER="${SERVICE_NAME}"
+          fi
+
+          IMAGE="${CI_REGISTRY}/${CI_REGISTRY_REPO}/${IMAGE_NAME}:${SERVICE_TAG}"
+
+          cd "${BASE_PATH}" || exit 1
+
+          if [ ! -f "${DOCKER_COMPOSE_FILE}" ]; then
+            echo "Compose file not found: ${DOCKER_COMPOSE_FILE}"
+            exit 1
+          fi
+
+          sed -i -E "s|^([[:space:]]*image:[[:space:]]*).*$|\1${IMAGE}|g" "${DOCKER_COMPOSE_FILE}"
+
+          docker compose -f "${DOCKER_COMPOSE_FILE}" up -d --force-recreate "${CONTAINER}"
+
+          if [ -n "${POST_DEPLOY_SLEEP_SECONDS}" ]; then
+            sleep "${POST_DEPLOY_SLEEP_SECONDS}"
+          fi
+
+          if [ "${RELOAD_NGINX}" = "true" ]; then
+            docker exec nginx nginx -s reload || true
+          fi

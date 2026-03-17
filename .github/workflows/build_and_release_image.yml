@@ -1,0 +1,207 @@
+name: Build and release Docker image
+
+permissions:
+  contents: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      service:
+        description: "Service to build"
+        required: true
+        type: choice
+        options:
+          - polkadot-js-apps
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
+      sha:
+        description: "Commit SHA for build/deploy (default: event SHA)"
+        required: false
+        default: ""
+  push:
+    branches:
+      - atleta
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.resolve.outputs.matrix }}
+      should_run: ${{ steps.resolve.outputs.should_run }}
+    steps:
+      - name: Resolve build settings
+        id: resolve
+        shell: bash
+        env:
+          INPUT_SERVICE: ${{ github.event.inputs.service || '' }}
+          INPUT_ENVIRONMENT: ${{ github.event.inputs.environment || '' }}
+          EVENT_NAME: ${{ github.event_name }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_REF: ${{ github.ref }}
+        run: |
+          set -euo pipefail
+
+          SERVICE_ID="polkadot-js-apps"
+          SOURCE_REF="${GITHUB_REF}"
+          TARGET_ENV=""
+
+          if [ "${EVENT_NAME}" = "workflow_dispatch" ]; then
+            if [ -z "${INPUT_SERVICE}" ]; then
+              echo "Input service is required for workflow_dispatch."
+              exit 1
+            fi
+
+            case "${INPUT_SERVICE}" in
+              polkadot-js-apps)
+                SERVICE_ID="${INPUT_SERVICE}"
+                ;;
+              *)
+                echo "Unknown service: ${INPUT_SERVICE}"
+                exit 1
+                ;;
+            esac
+
+            if [ -z "${INPUT_ENVIRONMENT}" ]; then
+              echo "Input environment is required for workflow_dispatch."
+              exit 1
+            fi
+
+            TARGET_ENV="${INPUT_ENVIRONMENT}"
+          elif [ "${EVENT_NAME}" = "push" ]; then
+            case "${GITHUB_REF_NAME}" in
+              atleta)
+                TARGET_ENV="dev"
+                ;;
+              *)
+                echo "should_run=false" >> "$GITHUB_OUTPUT"
+                echo "matrix=[]" >> "$GITHUB_OUTPUT"
+                exit 0
+                ;;
+            esac
+          else
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+            echo "matrix=[]" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          case "${TARGET_ENV}" in
+            dev|prod) ;;
+            *)
+              echo "Unknown target environment: ${TARGET_ENV}"
+              exit 1
+              ;;
+          esac
+
+          TRIGGER_DEPLOY="false"
+          DEPLOY_EVENT=""
+          if [ "${EVENT_NAME}" = "push" ] && [ "${TARGET_ENV}" = "dev" ]; then
+            TRIGGER_DEPLOY="true"
+            DEPLOY_EVENT="Deploy"
+          fi
+
+          MATRIX="[{\"service_id\":\"${SERVICE_ID}\",\"environment\":\"${TARGET_ENV}\",\"source_ref\":\"${SOURCE_REF}\",\"build_context\":\"./\",\"dockerfile\":\"docker/Dockerfile\",\"deploy_event\":\"${DEPLOY_EVENT}\",\"trigger_deploy\":${TRIGGER_DEPLOY}}]"
+
+          echo "should_run=true" >> "$GITHUB_OUTPUT"
+          echo "matrix=${MATRIX}" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs:
+      - prepare
+    if: needs.prepare.outputs.should_run == 'true' && needs.prepare.outputs.matrix != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+    environment: ${{ matrix.environment }}
+
+    steps:
+      - name: Checkout repository for local actions
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.source_ref }}
+
+      - name: Resolve SERVICE_TAG
+        uses: ./.github/actions/resolve-service-tag
+        with:
+          sha: ${{ github.event.inputs.sha || '' }}
+          log_ref: "false"
+
+      - name: Log build settings
+        run: |
+          echo "Service id: ${{ matrix.service_id }}"
+          echo "Environment: ${{ matrix.environment }}"
+          echo "Building image with SHA: ${{ env.SERVICE_TAG }}"
+
+      - name: Resolve build settings
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          SERVICE_NAME="${{ vars.SERVICE_NAME }}"
+
+          if [ -z "${SERVICE_NAME}" ]; then
+            SERVICE_NAME="sportchain-explorer"
+          fi
+
+          echo "IMAGE_NAME=${SERVICE_NAME}" >> "$GITHUB_ENV"
+          echo "CONTEXT=${{ matrix.build_context }}" >> "$GITHUB_ENV"
+          echo "DOCKERFILE=${{ matrix.dockerfile }}" >> "$GITHUB_ENV"
+
+      - name: Checkout repository at selected commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SERVICE_TAG }}
+
+      - name: Build Docker image
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.CI_REGISTRY }}
+          username: ${{ secrets.CI_REGISTRY_USER }}
+          password: ${{ secrets.CI_REGISTRY_PASSWORD }}
+
+      - name: Build and release Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ env.CONTEXT }}
+          file: ${{ env.DOCKERFILE }}
+          push: true
+          no-cache: true
+          tags: |
+            ${{ secrets.CI_REGISTRY }}/${{ secrets.CI_REGISTRY_REPO }}/${{ env.IMAGE_NAME }}:${{ env.SERVICE_TAG }}
+            ${{ secrets.CI_REGISTRY }}/${{ secrets.CI_REGISTRY_REPO }}/${{ env.IMAGE_NAME }}:latest
+
+      - name: Check if image exists
+        uses: ./.github/actions/check-image-exists
+        with:
+          registry: ${{ secrets.CI_REGISTRY }}
+          registry_repo: ${{ secrets.CI_REGISTRY_REPO }}
+          service_name: ${{ env.IMAGE_NAME }}
+          service_tag: ${{ env.SERVICE_TAG }}
+          image_name: ${{ env.IMAGE_NAME }}
+
+      - name: Trigger Deploy Workflow
+        if: matrix.trigger_deploy && matrix.deploy_event != ''
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          event-type: ${{ matrix.deploy_event }}
+          client-payload: '{"ref": "${{ matrix.source_ref }}", "sha": "${{ env.SERVICE_TAG }}", "service": "${{ matrix.service_id }}", "environment": "${{ matrix.environment }}"}'
+
+      - name: Prod deploy is manual-only
+        if: matrix.environment == 'prod'
+        shell: bash
+        run: |
+          echo "Image is built and pushed, deployment is manual-only for '${{ matrix.environment }}'."
+          echo "Run 'Deploy service' via workflow_dispatch with:"
+          echo "  environment=${{ matrix.environment }}"
+          echo "  sha=${{ env.SERVICE_TAG }}"

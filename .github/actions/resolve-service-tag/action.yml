@@ -1,0 +1,40 @@
+name: Resolve service tag
+description: Resolve SERVICE_TAG for workflow_dispatch, repository_dispatch, and push runs.
+inputs:
+  sha:
+    description: Optional explicit SHA override.
+    required: false
+    default: ""
+  log_ref:
+    description: Whether to log client_payload.ref for repository_dispatch.
+    required: false
+    default: "true"
+outputs:
+  service_tag:
+    description: Resolved service tag.
+    value: ${{ steps.resolve.outputs.service_tag }}
+runs:
+  using: composite
+  steps:
+    - name: Resolve SERVICE_TAG
+      id: resolve
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        if [ -n "${{ inputs.sha }}" ]; then
+          SERVICE_TAG="${{ inputs.sha }}"
+        elif [ "${{ github.event_name }}" = "repository_dispatch" ] && [ -n "${{ github.event.client_payload.sha }}" ]; then
+          SERVICE_TAG="${{ github.event.client_payload.sha }}"
+        elif [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.sha }}" ]; then
+          SERVICE_TAG="${{ github.event.inputs.sha }}"
+        else
+          SERVICE_TAG="${{ github.sha }}"
+        fi
+
+        echo "SERVICE_TAG=${SERVICE_TAG}" >> "$GITHUB_ENV"
+        echo "service_tag=${SERVICE_TAG}" >> "$GITHUB_OUTPUT"
+
+        if [ "${{ github.event_name }}" = "repository_dispatch" ] && [ "${{ inputs.log_ref }}" = "true" ]; then
+          echo "Ref: ${{ github.event.client_payload.ref }}"
+        fi
