@@ -1,4 +1,4 @@
-FROM ubuntu:latest as builder
+FROM ubuntu:latest AS builder
 
 # Install any needed packages
 RUN apt-get update && \
