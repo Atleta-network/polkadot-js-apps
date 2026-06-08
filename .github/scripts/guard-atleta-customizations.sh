@@ -32,6 +32,7 @@ reject_pattern() {
 }
 
 require_file ".github/workflows/build_and_release_image.yml"
+require_file ".github/workflows/ci.yml"
 require_file ".github/workflows/deploy_service.yml"
 require_file ".github/actions/deploy-over-ssh/action.yml"
 require_file ".github/actions/check-image-exists/action.yml"
@@ -47,6 +48,10 @@ require_pattern ".github/workflows/build_and_release_image.yml" "docker/build-pu
 require_pattern ".github/workflows/build_and_release_image.yml" "actions/checkout@v6" "current checkout action"
 require_pattern ".github/workflows/build_and_release_image.yml" "polkadot-js-apps-build" "build concurrency"
 
+require_pattern ".github/workflows/ci.yml" "CI config validation" "CI validation workflow"
+require_pattern ".github/workflows/ci.yml" "guard-atleta-customizations\\.sh" "Atleta guard in CI"
+require_pattern ".github/workflows/ci.yml" "docker compose -f docker/docker-compose.yml config --quiet" "compose validation in CI"
+
 require_pattern ".github/workflows/deploy_service.yml" "confirm_prod" "explicit prod confirmation input"
 require_pattern ".github/workflows/deploy_service.yml" "DEPLOY_PROD" "explicit prod confirmation value"
 require_pattern ".github/workflows/deploy_service.yml" "repository_dispatch" "dev deploy repository dispatch"
@@ -56,14 +61,18 @@ require_pattern ".github/workflows/deploy_service.yml" "polkadot-js-apps-deploy"
 require_pattern ".github/workflows/deploy_service.yml" "actions/checkout@v6" "current checkout action"
 
 require_pattern ".github/actions/deploy-over-ssh/action.yml" "docker compose -f \"\\$\\{DOCKER_COMPOSE_FILE\\}\" config --quiet" "remote compose validation"
+require_pattern ".github/actions/deploy-over-ssh/action.yml" "docker login \"\\$\\{CI_REGISTRY\\}\"" "remote registry login"
+require_pattern ".github/actions/deploy-over-ssh/action.yml" "python3 - \"\\$\\{DOCKER_COMPOSE_FILE\\}\" \"\\$\\{COMPOSE_SERVICE\\}\" \"\\$\\{IMAGE\\}\"" "scoped compose image update"
 require_pattern ".github/actions/deploy-over-ssh/action.yml" "flock -w 900" "remote deploy lock"
 require_pattern ".github/actions/deploy-over-ssh/action.yml" "docker compose -f \"\\$\\{DOCKER_COMPOSE_FILE\\}\" up -d --force-recreate \"\\$\\{COMPOSE_SERVICE\\}\"" "service-only compose recreate"
 require_pattern ".github/actions/deploy-over-ssh/action.yml" "wait_for_container" "post-deploy container wait"
-require_pattern ".github/actions/deploy-over-ssh/action.yml" "docker exec nginx nginx -t" "nginx validation before reload"
+require_pattern ".github/actions/deploy-over-ssh/action.yml" "docker exec \"\\$\\{NGINX_CONTAINER\\}\" nginx -t" "nginx validation before reload"
 reject_pattern ".github/actions/deploy-over-ssh/action.yml" "docker compose down" "destructive compose down"
 
 require_pattern "docker/docker-compose.yml" "sportchain-explorer:" "Atleta compose service"
+reject_pattern "docker/docker-compose.yml" "^version:" "obsolete compose version"
 require_pattern "docker/docker-compose.yml" "container_name: sportchain-explorer" "Atleta container name"
+require_pattern "docker/docker-compose.yml" "WS_URL: \\$\\{WS_URL:-\\}" "runtime WS_URL compose environment"
 require_pattern "docker/docker-compose.yml" "atleta:" "Atleta external docker network"
 require_pattern "docker/docker-compose.yml" "external: true" "external docker network"
 require_pattern "docker/docker-compose.yml" "healthcheck:" "container healthcheck"

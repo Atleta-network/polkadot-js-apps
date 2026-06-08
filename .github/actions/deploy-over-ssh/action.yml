@@ -13,6 +13,12 @@ inputs:
   registry:
     description: Container registry host.
     required: true
+  registry_username:
+    description: Container registry username for the remote Docker host.
+    required: true
+  registry_password:
+    description: Container registry password for the remote Docker host.
+    required: true
   registry_repo:
     description: Container registry repository or namespace.
     required: true
@@ -48,13 +54,19 @@ inputs:
     description: Whether to reload nginx after deploy.
     required: false
     default: "true"
+  nginx_container:
+    description: Nginx container name to reload.
+    required: false
+    default: "nginx"
 runs:
   using: composite
   steps:
     - name: Deploy service
-      uses: appleboy/ssh-action@v1.2.2
+      uses: appleboy/ssh-action@v1.2.5
       env:
         CI_REGISTRY: ${{ inputs.registry }}
+        CI_REGISTRY_USER: ${{ inputs.registry_username }}
+        CI_REGISTRY_PASSWORD: ${{ inputs.registry_password }}
         CI_REGISTRY_REPO: ${{ inputs.registry_repo }}
         SERVICE_NAME: ${{ inputs.service_name }}
         SERVICE_TAG: ${{ inputs.service_tag }}
@@ -65,15 +77,16 @@ runs:
         IMAGE_NAME_OVERRIDE: ${{ inputs.image_name }}
         POST_DEPLOY_SLEEP_SECONDS: ${{ inputs.post_deploy_sleep_seconds }}
         RELOAD_NGINX: ${{ inputs.reload_nginx }}
+        NGINX_CONTAINER: ${{ inputs.nginx_container }}
       with:
         host: ${{ inputs.host }}
         username: ${{ inputs.username }}
         key: ${{ inputs.ssh_private_key }}
-        envs: CI_REGISTRY,CI_REGISTRY_REPO,SERVICE_NAME,SERVICE_TAG,DOCKER_COMPOSE_FILE,BASE_PATH,COMPOSE_SERVICE_NAME_OVERRIDE,CONTAINER_NAME_OVERRIDE,IMAGE_NAME_OVERRIDE,POST_DEPLOY_SLEEP_SECONDS,RELOAD_NGINX
+        envs: CI_REGISTRY,CI_REGISTRY_USER,CI_REGISTRY_PASSWORD,CI_REGISTRY_REPO,SERVICE_NAME,SERVICE_TAG,DOCKER_COMPOSE_FILE,BASE_PATH,COMPOSE_SERVICE_NAME_OVERRIDE,CONTAINER_NAME_OVERRIDE,IMAGE_NAME_OVERRIDE,POST_DEPLOY_SLEEP_SECONDS,RELOAD_NGINX,NGINX_CONTAINER
         script: |
           set -euo pipefail
 
-          for var in CI_REGISTRY CI_REGISTRY_REPO SERVICE_NAME SERVICE_TAG DOCKER_COMPOSE_FILE BASE_PATH; do
+          for var in CI_REGISTRY CI_REGISTRY_USER CI_REGISTRY_PASSWORD CI_REGISTRY_REPO SERVICE_NAME SERVICE_TAG DOCKER_COMPOSE_FILE BASE_PATH; do
             if [ -z "${!var}" ]; then
               echo "Error: Environment variable ${var} is not set."
               exit 1
@@ -107,10 +120,87 @@ runs:
               exit 1
             fi
 
-            sed -i -E "s|^([[:space:]]*image:[[:space:]]*).*$|\1${IMAGE}|g" "${DOCKER_COMPOSE_FILE}"
+            if ! command -v python3 >/dev/null 2>&1; then
+              echo "python3 is required on the deploy host to update ${DOCKER_COMPOSE_FILE} safely."
+              exit 1
+            fi
+
+            python3 - "${DOCKER_COMPOSE_FILE}" "${COMPOSE_SERVICE}" "${IMAGE}" <<'PY'
+          import re
+          import sys
+          from pathlib import Path
+
+          compose_path = Path(sys.argv[1])
+          target_service = sys.argv[2]
+          image = sys.argv[3]
+
+          lines = compose_path.read_text(encoding="utf-8").splitlines()
+          output = []
+          in_services = False
+          services_indent = None
+          in_target = False
+          target_indent = None
+          found_target = False
+          updated_image = False
+
+          def indent_of(line):
+                return len(line) - len(line.lstrip(" "))
+
+          def append_image_if_needed():
+                global updated_image
+                if in_target and not updated_image:
+                    output.append(" " * (target_indent + 2) + f"image: {image}")
+                    updated_image = True
+
+          for line in lines:
+                stripped = line.strip()
+                is_content = bool(stripped) and not stripped.startswith("#")
+                indent = indent_of(line)
+
+                if in_target and is_content and indent <= target_indent:
+                    append_image_if_needed()
+                    in_target = False
+
+                if is_content and stripped == "services:":
+                    in_services = True
+                    services_indent = indent
+                    output.append(line)
+                    continue
+
+                if in_services and is_content and indent <= services_indent and stripped != "services:":
+                    in_services = False
+
+                if in_services and is_content and indent > services_indent:
+                    match = re.match(r"^\s*([A-Za-z0-9_.-]+):\s*(?:#.*)?$", line)
+                    if match and indent == services_indent + 2:
+                        if match.group(1) == target_service:
+                            in_target = True
+                            target_indent = indent
+                            found_target = True
+                            updated_image = False
+                        elif in_target:
+                            append_image_if_needed()
+                            in_target = False
+
+                if in_target and is_content and indent > target_indent and stripped.startswith("image:"):
+                    output.append(" " * indent + f"image: {image}")
+                    updated_image = True
+                    continue
+
+                output.append(line)
+
+          if in_target:
+                append_image_if_needed()
+
+          if not found_target:
+                raise SystemExit(f"Compose service not found: {target_service}")
+
+          compose_path.write_text("\n".join(output) + "\n", encoding="utf-8")
+          PY
 
             docker compose -f "${DOCKER_COMPOSE_FILE}" config --quiet
-            docker compose -f "${DOCKER_COMPOSE_FILE}" pull "${COMPOSE_SERVICE}" || true
+            printf '%s' "${CI_REGISTRY_PASSWORD}" | docker login "${CI_REGISTRY}" --username "${CI_REGISTRY_USER}" --password-stdin
+            docker compose -f "${DOCKER_COMPOSE_FILE}" pull "${COMPOSE_SERVICE}"
             docker compose -f "${DOCKER_COMPOSE_FILE}" up -d --force-recreate "${COMPOSE_SERVICE}"
 
             if [ -n "${POST_DEPLOY_SLEEP_SECONDS}" ]; then
@@ -119,9 +209,9 @@ runs:
 
             wait_for_container
 
-            if [ "${RELOAD_NGINX}" = "true" ] && docker inspect nginx >/dev/null 2>&1; then
-              docker exec nginx nginx -t
-              docker exec nginx nginx -s reload
+            if [ "${RELOAD_NGINX}" = "true" ] && docker inspect "${NGINX_CONTAINER}" >/dev/null 2>&1; then
+              docker exec "${NGINX_CONTAINER}" nginx -t
+              docker exec "${NGINX_CONTAINER}" nginx -s reload
             fi
 
             docker compose -f "${DOCKER_COMPOSE_FILE}" ps "${COMPOSE_SERVICE}"

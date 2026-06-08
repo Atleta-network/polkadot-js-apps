@@ -221,6 +221,8 @@ jobs:
           username: ${{ secrets.HOST_1_USERNAME }}
           ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
           registry: ${{ secrets.CI_REGISTRY }}
+          registry_username: ${{ secrets.CI_REGISTRY_USER }}
+          registry_password: ${{ secrets.CI_REGISTRY_PASSWORD }}
           registry_repo: ${{ secrets.CI_REGISTRY_REPO }}
           service_name: ${{ env.EFFECTIVE_SERVICE_NAME }}
           service_tag: ${{ env.SERVICE_TAG }}

@@ -17,8 +17,8 @@ IMAGE_VERSION=$(cat package.json \
   | sed 's/[",]//g' \
   | sed 's/ //g')
 
-echo "*** Building $NAME"
-docker compose -f docker/docker-compose.yaml build 
+echo "*** Building $IMAGE_NAME"
+docker compose -f docker/docker-compose.yml build
 
 docker login -u $IMAGE_REPO -p $DOCKER_PASS
 
