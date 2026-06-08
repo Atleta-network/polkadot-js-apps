@@ -7,6 +7,15 @@ services:
     restart: unless-stopped
     expose:
       - "80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    labels:
+      com.atleta.role: "polkadot-js-apps"
+      com.atleta.service: "sportchain-explorer"
     networks:
       - atleta
 

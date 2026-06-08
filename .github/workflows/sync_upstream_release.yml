@@ -1,0 +1,186 @@
+name: Sync upstream release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Upstream polkadot-js/apps release tag, for example v0.170.1
+        required: true
+        type: string
+      upstream_repo:
+        description: Upstream repository owner/name
+        required: true
+        default: polkadot-js/apps
+        type: string
+      target_branch:
+        description: Target branch to merge into
+        required: true
+        default: atleta
+        type: string
+      sync_branch:
+        description: Optional sync branch name. Defaults to sync/upstream-<release_tag>
+        required: false
+        type: string
+      auto_merge:
+        description: Merge PR automatically after successful checks
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: polkadot-js-apps-upstream-sync-${{ inputs.target_branch }}-${{ inputs.release_tag }}
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout target branch
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.target_branch }}
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Merge upstream release tag
+        id: sync
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          UPSTREAM_REPO: ${{ inputs.upstream_repo }}
+          TARGET_BRANCH: ${{ inputs.target_branch }}
+          SYNC_BRANCH: ${{ inputs.sync_branch }}
+        run: |
+          .github/scripts/sync-upstream-release.sh
+
+      - name: Validate Atleta customizations
+        if: steps.sync.outputs.has_changes == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash -n .github/scripts/guard-atleta-customizations.sh
+          bash -n .github/scripts/sync-upstream-release.sh
+          .github/scripts/guard-atleta-customizations.sh
+
+      - name: Validate workflows, actions, and compose YAML
+        if: steps.sync.outputs.has_changes == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          ruby -e 'require "yaml"; ARGV.each { |f| YAML.load_file(f); puts "ok #{f}" }' \
+            .github/workflows/build_and_release_image.yml \
+            .github/workflows/deploy_service.yml \
+            .github/workflows/sync_upstream_release.yml \
+            .github/actions/check-image-exists/action.yml \
+            .github/actions/deploy-over-ssh/action.yml \
+            .github/actions/resolve-service-tag/action.yml \
+            docker/docker-compose.yml
+
+      - name: Validate Docker compose config
+        if: steps.sync.outputs.has_changes == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker compose -f docker/docker-compose.yml config --quiet
+
+      - name: Check for secrets in sync diff
+        if: steps.sync.outputs.has_changes == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check "origin/${{ inputs.target_branch }}..HEAD"
+          if git diff "origin/${{ inputs.target_branch }}..HEAD" | grep -E 'BEGIN (OPENSSH|RSA|EC|PRIVATE)|CI_REGISTRY_PASSWORD=|SSH_PRIVATE_KEY=|GIT_ACCESS_TOKEN=|DOCKER_PASS=|[A-Za-z0-9_]*TOKEN=[A-Za-z0-9_-]{12,}' >/dev/null; then
+            echo "Potential secret found in upstream sync diff." >&2
+            exit 1
+          fi
+
+      - name: Push sync branch
+        if: steps.sync.outputs.has_changes == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git push --force-with-lease origin "HEAD:${{ steps.sync.outputs.sync_branch }}"
+
+      - name: Create or update PR
+        id: pr
+        if: steps.sync.outputs.has_changes == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          title="chore: sync upstream polkadot-js/apps ${{ steps.sync.outputs.release_tag }}"
+          body_file="$(mktemp)"
+          cat > "${body_file}" <<BODY
+          Syncs \`${{ steps.sync.outputs.upstream_repo }}@${{ steps.sync.outputs.release_tag }}\` into \`${{ steps.sync.outputs.target_branch }}\`.
+
+          Guard checks performed by this workflow:
+          - upstream merge conflict check
+          - Atleta CI/CD and deploy invariants
+          - Atleta RPC endpoint and type-bundle invariants
+          - Docker compose labels/healthcheck validation
+          - workflow/action/compose YAML parsing
+          - rendered compose config validation
+          - secret-pattern scan across sync diff
+
+          Deploy is not triggered by this workflow.
+          BODY
+
+          existing_url="$(gh pr list \
+            --repo "${{ github.repository }}" \
+            --head "${{ steps.sync.outputs.sync_branch }}" \
+            --base "${{ steps.sync.outputs.target_branch }}" \
+            --state open \
+            --json url \
+            --jq '.[0].url // empty')"
+
+          if [ -n "${existing_url}" ]; then
+            gh pr edit "${existing_url}" --title "${title}" --body-file "${body_file}"
+            pr_url="${existing_url}"
+          else
+            pr_url="$(gh pr create \
+              --repo "${{ github.repository }}" \
+              --base "${{ steps.sync.outputs.target_branch }}" \
+              --head "${{ steps.sync.outputs.sync_branch }}" \
+              --title "${title}" \
+              --body-file "${body_file}")"
+          fi
+
+          echo "url=${pr_url}" >> "${GITHUB_OUTPUT}"
+
+      - name: Auto-merge PR
+        if: steps.sync.outputs.has_changes == 'true' && inputs.auto_merge
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          gh pr merge "${{ steps.pr.outputs.url }}" --merge --delete-branch=false
+
+      - name: Summary
+        shell: bash
+        run: |
+          {
+            echo "## Upstream sync"
+            echo
+            echo "- Upstream: \`${{ inputs.upstream_repo }}@${{ inputs.release_tag }}\`"
+            echo "- Target branch: \`${{ inputs.target_branch }}\`"
+            echo "- Sync branch: \`${{ steps.sync.outputs.sync_branch }}\`"
+            echo "- Has changes: \`${{ steps.sync.outputs.has_changes }}\`"
+            if [ -n "${{ steps.pr.outputs.url }}" ]; then
+              echo "- PR: ${{ steps.pr.outputs.url }}"
+            fi
+          } | tee -a "${GITHUB_STEP_SUMMARY}"

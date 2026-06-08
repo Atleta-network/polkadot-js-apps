@@ -3,6 +3,10 @@ name: Deploy service
 permissions:
   contents: read
 
+concurrency:
+  group: polkadot-js-apps-deploy-${{ github.event.inputs.environment || github.event.client_payload.environment || 'unknown' }}
+  cancel-in-progress: false
+
 on:
   workflow_dispatch:
     inputs:
@@ -121,10 +125,11 @@ jobs:
     if: needs.prepare.outputs.should_run == 'true'
     runs-on: ubuntu-latest
     environment: ${{ needs.prepare.outputs.environment }}
+    timeout-minutes: 30
 
     steps:
       - name: Checkout repository for local actions
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Validate explicit prod confirmation
         if: github.event_name == 'workflow_dispatch' && needs.prepare.outputs.environment == 'prod'
@@ -156,14 +161,19 @@ jobs:
           set -euo pipefail
 
           SERVICE_NAME="${{ vars.SERVICE_NAME }}"
+          COMPOSE_SERVICE_NAME="${{ vars.COMPOSE_SERVICE_NAME }}"
           CONTAINER_NAME="${{ vars.CONTAINER_NAME }}"
 
           if [ -z "${SERVICE_NAME}" ]; then
             SERVICE_NAME="sportchain-explorer"
           fi
 
+          if [ -z "${COMPOSE_SERVICE_NAME}" ]; then
+            COMPOSE_SERVICE_NAME="${SERVICE_NAME}"
+          fi
+
           if [ -z "${CONTAINER_NAME}" ]; then
-            CONTAINER_NAME="${SERVICE_NAME}"
+            CONTAINER_NAME="${COMPOSE_SERVICE_NAME}"
           fi
 
           if [ -z "${DOCKER_COMPOSE_FILE}" ]; then
@@ -177,13 +187,14 @@ jobs:
           fi
 
           echo "EFFECTIVE_SERVICE_NAME=${SERVICE_NAME}" >> "$GITHUB_ENV"
+          echo "EFFECTIVE_COMPOSE_SERVICE_NAME=${COMPOSE_SERVICE_NAME}" >> "$GITHUB_ENV"
           echo "EFFECTIVE_CONTAINER_NAME=${CONTAINER_NAME}" >> "$GITHUB_ENV"
           echo "EFFECTIVE_BASE_PATH=${BASE_PATH}" >> "$GITHUB_ENV"
           echo "EFFECTIVE_DOCKER_COMPOSE_FILE=${DOCKER_COMPOSE_FILE}" >> "$GITHUB_ENV"
           echo "IMAGE_NAME=${SERVICE_NAME}" >> "$GITHUB_ENV"
 
       - name: Checkout repository at selected commit
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.ref || env.SERVICE_TAG }}
 
@@ -215,7 +226,21 @@ jobs:
           service_tag: ${{ env.SERVICE_TAG }}
           docker_compose_file: ${{ env.EFFECTIVE_DOCKER_COMPOSE_FILE }}
           base_path: ${{ env.EFFECTIVE_BASE_PATH }}
+          compose_service_name: ${{ env.EFFECTIVE_COMPOSE_SERVICE_NAME }}
           container_name: ${{ env.EFFECTIVE_CONTAINER_NAME }}
           image_name: ${{ env.IMAGE_NAME }}
           post_deploy_sleep_seconds: "10"
           reload_nginx: "true"
+
+      - name: Deployment summary
+        shell: bash
+        run: |
+          {
+            echo "## Polkadot JS Apps deploy"
+            echo
+            echo "- Service: \`${{ needs.prepare.outputs.service_id }}\`"
+            echo "- Environment: \`${{ needs.prepare.outputs.environment }}\`"
+            echo "- Service tag: \`${{ env.SERVICE_TAG }}\`"
+            echo "- Compose service: \`${{ env.EFFECTIVE_COMPOSE_SERVICE_NAME }}\`"
+            echo "- Container: \`${{ env.EFFECTIVE_CONTAINER_NAME }}\`"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
