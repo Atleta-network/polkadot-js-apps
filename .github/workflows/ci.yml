@@ -1,0 +1,29 @@
+name: CI config validation
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+  push:
+    branches:
+      - atleta
+
+jobs:
+  config:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Validate workflow YAML
+        shell: bash
+        run: |
+          set -euo pipefail
+          ruby -e 'require "yaml"; ARGV.each { |file| YAML.load_file(file); puts "ok #{file}" }' \
+            .github/workflows/*.yml \
+            .github/actions/*/action.yml
+
+      - name: Validate Docker Compose
+        shell: bash
+        run: docker compose -f docker/docker-compose.yml config
