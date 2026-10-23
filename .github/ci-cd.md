@@ -9,6 +9,12 @@ image. The upstream source is `polkadot-js/apps`.
 - Upstream release syncs must be done through `Sync upstream release`.
 - Sync branches use `sync/upstream-<release_tag>` unless overridden manually.
 
+## Toolchain
+
+- Builder image: `node:24.22.1-bookworm-slim` (matches `.nvmrc`), yarn
+  `4.6.0` via corepack (`packageManager`), `yarn install --immutable`.
+- Runtime image: `nginx:1.31.8-alpine3.24-slim`.
+
 ## Workflows
 
 - `CI config validation` validates workflow/action YAML, scripts, Atleta

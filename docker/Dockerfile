@@ -1,23 +1,21 @@
-FROM ubuntu:latest AS builder
+FROM node:24.22.1-bookworm-slim AS builder
 
-# Install any needed packages
+# Toolchain for native modules (node-gyp fallback when no prebuild is available)
 RUN apt-get update && \
-  apt-get install --no-install-recommends -y build-essential curl git gnupg ca-certificates
-
-# install nodejs
-RUN curl -sL https://deb.nodesource.com/setup_lts.x | bash -
-RUN apt-get install --no-install-recommends -y nodejs && \
+  apt-get install --no-install-recommends -y build-essential python3 git ca-certificates && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/*
-RUN npm install yarn -g
+
+# Use the yarn version pinned in package.json (packageManager) via corepack
+RUN corepack enable
 
 WORKDIR /apps
 COPY . .
 
-RUN yarn && NODE_ENV=production yarn build:www
+RUN yarn install --immutable && NODE_ENV=production yarn build:www
 
 # ===========================================================
-FROM nginx:stable-alpine
+FROM nginx:1.31.8-alpine3.24-slim
 
 # The following is mainly for doc purpose to show which ENV is supported
 ENV WS_URL=

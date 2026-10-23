@@ -157,6 +157,9 @@ jobs:
         env:
           DOCKER_COMPOSE_FILE: ${{ vars.DOCKER_COMPOSE_FILE }}
           BASE_PATH: ${{ secrets.BASE_PATH }}
+          HOST_1: ${{ secrets.HOST_1 }}
+          HOST_1_USERNAME: ${{ secrets.HOST_1_USERNAME }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
           set -euo pipefail
 
@@ -181,8 +184,16 @@ jobs:
             exit 1
           fi
 
-          if [ -z "${BASE_PATH}" ]; then
-            echo "BASE_PATH is required in GitHub Secrets."
+          MISSING_SECRETS=""
+          for secret_name in BASE_PATH HOST_1 HOST_1_USERNAME SSH_PRIVATE_KEY; do
+            if [ -z "${!secret_name:-}" ]; then
+              MISSING_SECRETS="${MISSING_SECRETS} ${secret_name}"
+            fi
+          done
+
+          if [ -n "${MISSING_SECRETS}" ]; then
+            echo "::error::Missing deploy secrets in GitHub environment '${{ needs.prepare.outputs.environment }}':${MISSING_SECRETS}"
+            echo "Add them to the environment before deploying (see .github/ci-cd.md)."
             exit 1
           fi
 
@@ -199,7 +210,7 @@ jobs:
           ref: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.ref || env.SERVICE_TAG }}
 
       - name: Log in to Docker Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4.2.0
         with:
           registry: ${{ secrets.CI_REGISTRY }}
           username: ${{ secrets.CI_REGISTRY_USER }}
