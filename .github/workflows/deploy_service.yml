@@ -4,7 +4,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: polkadot-js-apps-deploy-${{ github.event.inputs.environment || github.event.client_payload.environment || 'unknown' }}
+  group: polkadot-js-apps-deploy-${{ github.event.inputs.environment || 'prod' }}
   cancel-in-progress: false
 
 on:
@@ -21,18 +21,15 @@ on:
         required: true
         type: choice
         options:
-          - dev
           - prod
       sha:
         description: "Commit SHA for deploy/rollback (default: event SHA)"
         required: false
         default: ""
       confirm_prod:
-        description: "Type DEPLOY_PROD to confirm prod rollout (required only for prod)"
-        required: false
+        description: "Type DEPLOY_PROD to confirm prod rollout"
+        required: true
         default: ""
-  repository_dispatch:
-    types: [Deploy]
 
 jobs:
   prepare:
@@ -46,10 +43,10 @@ jobs:
         id: resolve
         shell: bash
         env:
-          INPUT_SERVICE: ${{ github.event.inputs.service || github.event.client_payload.service || '' }}
-          INPUT_ENVIRONMENT: ${{ github.event.inputs.environment || github.event.client_payload.environment || '' }}
+          INPUT_SERVICE: ${{ github.event.inputs.service || '' }}
+          INPUT_ENVIRONMENT: ${{ github.event.inputs.environment || '' }}
+          CONFIRM_PROD: ${{ github.event.inputs.confirm_prod || '' }}
           EVENT_NAME: ${{ github.event_name }}
-          DISPATCH_ACTION: ${{ github.event.action || '' }}
         run: |
           set -euo pipefail
 
@@ -78,24 +75,14 @@ jobs:
             fi
 
             TARGET_ENV="${INPUT_ENVIRONMENT}"
-          elif [ "${EVENT_NAME}" = "repository_dispatch" ]; then
-            case "${DISPATCH_ACTION}" in
-              Deploy)
-                SERVICE_ID="${INPUT_SERVICE:-polkadot-js-apps}"
-                TARGET_ENV="${INPUT_ENVIRONMENT}"
-                ;;
-              *)
-                echo "should_run=false" >> "$GITHUB_OUTPUT"
-                exit 0
-                ;;
-            esac
           else
+            echo "Prod deploy is manual-only via workflow_dispatch."
             echo "should_run=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
           case "${TARGET_ENV}" in
-            dev|prod) ;;
+            prod) ;;
             *)
               echo "Unknown target environment: ${TARGET_ENV}"
               exit 1
@@ -110,8 +97,9 @@ jobs:
               ;;
           esac
 
-          if [ "${EVENT_NAME}" = "repository_dispatch" ] && [ "${TARGET_ENV}" = "prod" ]; then
-            echo "Prod deploy is manual-only via workflow_dispatch."
+          if [ "${CONFIRM_PROD}" != "DEPLOY_PROD" ]; then
+            echo "::error::Prod deploy requires explicit confirmation."
+            echo "Re-run workflow_dispatch and set confirm_prod=DEPLOY_PROD"
             exit 1
           fi
 
@@ -130,16 +118,6 @@ jobs:
     steps:
       - name: Checkout repository for local actions
         uses: actions/checkout@v6
-
-      - name: Validate explicit prod confirmation
-        if: github.event_name == 'workflow_dispatch' && needs.prepare.outputs.environment == 'prod'
-        shell: bash
-        run: |
-          if [ "${{ github.event.inputs.confirm_prod }}" != "DEPLOY_PROD" ]; then
-            echo "Prod deploy requires explicit confirmation."
-            echo "Re-run workflow_dispatch and set confirm_prod=DEPLOY_PROD"
-            exit 1
-          fi
 
       - name: Resolve SERVICE_TAG
         uses: ./.github/actions/resolve-service-tag
@@ -207,7 +185,7 @@ jobs:
       - name: Checkout repository at selected commit
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.ref || env.SERVICE_TAG }}
+          ref: ${{ env.SERVICE_TAG }}
 
       - name: Log in to Docker Registry
         uses: docker/login-action@v4.2.0

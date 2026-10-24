@@ -21,7 +21,6 @@ on:
         required: true
         type: choice
         options:
-          - dev
           - prod
       sha:
         description: "Commit SHA for build/deploy (default: event SHA)"
@@ -44,7 +43,6 @@ jobs:
         env:
           INPUT_SERVICE: ${{ github.event.inputs.service || '' }}
           INPUT_ENVIRONMENT: ${{ github.event.inputs.environment || '' }}
-          AUTO_DEPLOY_DEV: ${{ vars.AUTO_DEPLOY_DEV || 'false' }}
           EVENT_NAME: ${{ github.event_name }}
           GITHUB_REF_NAME: ${{ github.ref_name }}
           GITHUB_REF: ${{ github.ref }}
@@ -80,7 +78,7 @@ jobs:
           elif [ "${EVENT_NAME}" = "push" ]; then
             case "${GITHUB_REF_NAME}" in
               atleta)
-                TARGET_ENV="dev"
+                TARGET_ENV="prod"
                 ;;
               *)
                 echo "should_run=false" >> "$GITHUB_OUTPUT"
@@ -95,21 +93,14 @@ jobs:
           fi
 
           case "${TARGET_ENV}" in
-            dev|prod) ;;
+            prod) ;;
             *)
               echo "Unknown target environment: ${TARGET_ENV}"
               exit 1
               ;;
           esac
 
-          TRIGGER_DEPLOY="false"
-          DEPLOY_EVENT=""
-          if [ "${EVENT_NAME}" = "push" ] && [ "${TARGET_ENV}" = "dev" ] && [ "${AUTO_DEPLOY_DEV}" = "true" ]; then
-            TRIGGER_DEPLOY="true"
-            DEPLOY_EVENT="Deploy"
-          fi
-
-          MATRIX="[{\"service_id\":\"${SERVICE_ID}\",\"environment\":\"${TARGET_ENV}\",\"source_ref\":\"${SOURCE_REF}\",\"build_context\":\"./\",\"dockerfile\":\"docker/Dockerfile\",\"deploy_event\":\"${DEPLOY_EVENT}\",\"trigger_deploy\":${TRIGGER_DEPLOY}}]"
+          MATRIX="[{\"service_id\":\"${SERVICE_ID}\",\"environment\":\"${TARGET_ENV}\",\"source_ref\":\"${SOURCE_REF}\",\"build_context\":\"./\",\"dockerfile\":\"docker/Dockerfile\"}]"
 
           echo "should_run=true" >> "$GITHUB_OUTPUT"
           echo "matrix=${MATRIX}" >> "$GITHUB_OUTPUT"
@@ -194,23 +185,14 @@ jobs:
           service_tag: ${{ env.SERVICE_TAG }}
           image_name: ${{ env.IMAGE_NAME }}
 
-      - name: Trigger Deploy Workflow
-        if: matrix.trigger_deploy && matrix.deploy_event != ''
-        uses: peter-evans/repository-dispatch@v4.0.1
-        with:
-          token: ${{ github.token }}
-          repository: ${{ github.repository }}
-          event-type: ${{ matrix.deploy_event }}
-          client-payload: '{"ref": "${{ matrix.source_ref }}", "sha": "${{ env.SERVICE_TAG }}", "service": "${{ matrix.service_id }}", "environment": "${{ matrix.environment }}"}'
-
       - name: Prod deploy is manual-only
-        if: matrix.environment == 'prod'
         shell: bash
         run: |
           echo "Image is built and pushed, deployment is manual-only for '${{ matrix.environment }}'."
           echo "Run 'Deploy service' via workflow_dispatch with:"
           echo "  environment=${{ matrix.environment }}"
           echo "  sha=${{ env.SERVICE_TAG }}"
+          echo "  confirm_prod=DEPLOY_PROD"
 
       - name: Build summary
         shell: bash
@@ -222,5 +204,5 @@ jobs:
             echo "- Environment: \`${{ matrix.environment }}\`"
             echo "- Source ref: \`${{ matrix.source_ref }}\`"
             echo "- Service tag: \`${{ env.SERVICE_TAG }}\`"
-            echo "- Auto deploy: \`${{ matrix.trigger_deploy }}\`"
+            echo "- Deploy: manual (\`Deploy service\`, \`confirm_prod=DEPLOY_PROD\`)"
           } | tee -a "$GITHUB_STEP_SUMMARY"

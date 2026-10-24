@@ -3,6 +3,14 @@
 This fork deploys the `atleta` branch as the Atleta-hosted Polkadot JS Apps
 image. The upstream source is `polkadot-js/apps`.
 
+## Environment
+
+There is a single environment, `prod`:
+
+- host: `134.195.199.82`, compose directory `/opt/polkadot-explorer`;
+- container / compose service: `sportchain-explorer`;
+- URL: https://polkadot-explorer.atleta.network
+
 ## Branches
 
 - `atleta` is the Atleta integration and deployment branch.
@@ -19,13 +27,26 @@ image. The upstream source is `polkadot-js/apps`.
 
 - `CI config validation` validates workflow/action YAML, scripts, Atleta
   customization guards, and Docker Compose.
-- `Build and release Docker image` builds and pushes the Docker image.
-- `Deploy service` deploys an already-built image over SSH.
+- `Build and release Docker image` builds and pushes the `prod` image on every
+  push to `atleta` (tags `<sha>` and `latest`); it can also be run manually via
+  `workflow_dispatch` (optionally with `sha`). It never deploys.
+- `Deploy service` deploys an already-built image to `prod` over SSH. It is
+  `workflow_dispatch`-only and requires `confirm_prod=DEPLOY_PROD`.
 - `Sync upstream release` merges an upstream release tag into a separate branch,
   validates Atleta invariants, and opens or updates a PR into `atleta`.
 
 Production deployment is manual-only through `Deploy service` with
-`confirm_prod=DEPLOY_PROD`.
+`confirm_prod=DEPLOY_PROD`. Deploy is intentionally not triggered on push,
+because `Sync upstream release` lands upstream releases into `atleta` and those
+should be reviewed before rollout.
+
+```sh
+gh workflow run deploy_service.yml --ref atleta \
+  -f service=polkadot-js-apps -f environment=prod \
+  -f sha=<commit-sha> -f confirm_prod=DEPLOY_PROD
+```
+
+Rollback is the same command with an older, already-built `sha`.
 
 ## Repository Variables
 
@@ -41,12 +62,7 @@ Optional repository variables:
 ```text
 COMPOSE_SERVICE_NAME=sportchain-explorer
 CONTAINER_NAME=sportchain-explorer
-AUTO_DEPLOY_DEV=false
 ```
-
-Set `AUTO_DEPLOY_DEV=true` only after the `dev` environment has SSH deploy
-secrets. With the current settings, pushes to `atleta` build the dev image but
-do not auto-deploy it.
 
 ## Repository Secrets
 
@@ -61,7 +77,7 @@ CI_REGISTRY_PASSWORD
 
 ## Environment Secrets
 
-Each deployable GitHub environment (`dev`, `prod`) needs:
+The `prod` GitHub environment needs:
 
 ```text
 BASE_PATH
@@ -70,9 +86,7 @@ HOST_1_USERNAME
 SSH_PRIVATE_KEY
 ```
 
-The current `prod` environment has deploy secrets. The `dev` environment does
-not currently have deploy secrets, so automatic dev rollout must stay disabled
-until those values are added.
+`Deploy service` fails early with a clear error if any of them is missing.
 
 ## Upstream Release Sync
 
