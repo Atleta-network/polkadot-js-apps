@@ -176,14 +176,16 @@ jobs:
             ${{ secrets.CI_REGISTRY }}/${{ secrets.CI_REGISTRY_REPO }}/${{ env.IMAGE_NAME }}:${{ env.SERVICE_TAG }}
             ${{ secrets.CI_REGISTRY }}/${{ secrets.CI_REGISTRY_REPO }}/${{ env.IMAGE_NAME }}:latest
 
-      - name: Check if image exists
-        uses: ./.github/actions/check-image-exists
-        with:
-          registry: ${{ secrets.CI_REGISTRY }}
-          registry_repo: ${{ secrets.CI_REGISTRY_REPO }}
-          service_name: ${{ env.IMAGE_NAME }}
-          service_tag: ${{ env.SERVICE_TAG }}
-          image_name: ${{ env.IMAGE_NAME }}
+      - name: Verify published image through Docker daemon
+        shell: bash
+        env:
+          CI_REGISTRY: ${{ secrets.CI_REGISTRY }}
+          CI_REGISTRY_REPO: ${{ secrets.CI_REGISTRY_REPO }}
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+          SERVICE_TAG: ${{ env.SERVICE_TAG }}
+        run: |
+          set -euo pipefail
+          docker pull "${CI_REGISTRY}/${CI_REGISTRY_REPO}/${IMAGE_NAME}:${SERVICE_TAG}" > /dev/null
 
       - name: Prod deploy is manual-only
         shell: bash
