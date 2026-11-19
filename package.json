@@ -75,7 +75,6 @@
     "@types/react-beautiful-dnd": "^13.1.7",
     "@types/react-copy-to-clipboard": "^5.0.7",
     "@types/react-dom": "^18.2.18",
-    "@types/react-router-dom": "^5.3.3",
     "@types/store": "^2.0.5",
     "concurrently": "^8.2.2",
     "devtron": "^1.4.0",
