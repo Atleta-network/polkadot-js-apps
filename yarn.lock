@@ -2215,8 +2215,8 @@ __metadata:
     react-dropzone: "npm:^14.2.3"
     react-i18next: "npm:^13.5.0"
     react-markdown: "npm:^9.0.1"
-    react-router: "npm:^6.21.0"
-    react-router-dom: "npm:^6.21.0"
+    react-router: "npm:7.18.6"
+    react-router-dom: "npm:7.18.6"
     react-tooltip: "npm:^4.5.1"
     rehype-raw: "npm:^7.0.0"
     semantic-ui-css: "npm:^2.5.0"
@@ -2724,13 +2724,6 @@ __metadata:
   version: 5.7.0
   resolution: "@polymeshassociation/polymesh-types@npm:5.7.0"
   checksum: 7beefbe20ceb896a739e12241af8ac02245af0bc7383b7c36bcbd019d559eae2bcc27f06034f7845989674568a7fc2cd3b16793d2cd1499cbd5cf681ac088799
-  languageName: node
-  linkType: hard
-
-"@remix-run/router@npm:1.14.0":
-  version: 1.14.0
-  resolution: "@remix-run/router@npm:1.14.0"
-  checksum: cc46150f087695ba9da9aa905bcbe1d53d7e3ae4de37645c206b4bcb57a4605ebf3bdc87b9eff299562e7d68ddf80d412ac64cc60ecd2116d4aeb39cf8a0e358
   languageName: node
   linkType: hard
 
@@ -3378,13 +3371,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/history@npm:*, @types/history@npm:^4.7.11":
-  version: 4.7.11
-  resolution: "@types/history@npm:4.7.11"
-  checksum: 1da529a3485f3015daf794effa3185493bf7dd2551c26932389c614f5a0aab76ab97645897d1eef9c74ead216a3848fcaa019f165bbd6e4b71da6eff164b4c68
-  languageName: node
-  linkType: hard
-
 "@types/hoist-non-react-statics@npm:^3.3.0":
   version: 3.3.1
   resolution: "@types/hoist-non-react-statics@npm:3.3.1"
@@ -3624,27 +3610,6 @@ __metadata:
     hoist-non-react-statics: "npm:^3.3.0"
     redux: "npm:^4.0.0"
   checksum: dce0b60fede4d82f8e9ad2aab6905e41735e04b771359107083ca18fc1c804c4c7b4cc0c941ed3b9f7c273ef0a471c26bb9c03e6004245869887340b34a9c8cd
-  languageName: node
-  linkType: hard
-
-"@types/react-router-dom@npm:^5.3.3":
-  version: 5.3.3
-  resolution: "@types/react-router-dom@npm:5.3.3"
-  dependencies:
-    "@types/history": "npm:^4.7.11"
-    "@types/react": "npm:*"
-    "@types/react-router": "npm:*"
-  checksum: 28c4ea48909803c414bf5a08502acbb8ba414669b4b43bb51297c05fe5addc4df0b8fd00e0a9d1e3535ec4073ef38aaafac2c4a2b95b787167d113bc059beff3
-  languageName: node
-  linkType: hard
-
-"@types/react-router@npm:*":
-  version: 5.1.9
-  resolution: "@types/react-router@npm:5.1.9"
-  dependencies:
-    "@types/history": "npm:*"
-    "@types/react": "npm:*"
-  checksum: 86332d47f6317d8cc1bcfde2e0e8abef1287258162ee211ace9ce65bab890fcad60cc6de9ad50b9ee35fad74c3721b3fc5ae17b3cbe140c4ecf979226bb569fd
   languageName: node
   linkType: hard
 
@@ -6500,6 +6465,13 @@ __metadata:
   version: 0.4.2
   resolution: "cookie@npm:0.4.2"
   checksum: 2e1de9fdedca54881eab3c0477aeb067f281f3155d9cfee9d28dfb252210d09e85e9d175c0a60689661feb9e35e588515352f2456bc1f8e8db4267e05fd70137
+  languageName: node
+  linkType: hard
+
+"cookie@npm:^1.0.1":
+  version: 1.1.1
+  resolution: "cookie@npm:1.1.1"
+  checksum: 85538153054791155cf4d38d2e807e3b9382d71bf71d92fc46fca348515ea574049d0d9ef8eb84d2d54a681ad1d7a7316b1989b901dace50a6c0f4c3858dbdb2
   languageName: node
   linkType: hard
 
@@ -14121,7 +14093,6 @@ __metadata:
     "@types/react-beautiful-dnd": "npm:^13.1.7"
     "@types/react-copy-to-clipboard": "npm:^5.0.7"
     "@types/react-dom": "npm:^18.2.18"
-    "@types/react-router-dom": "npm:^5.3.3"
     "@types/store": "npm:^2.0.5"
     concurrently: "npm:^8.2.2"
     devtron: "npm:^1.4.0"
@@ -14906,27 +14877,31 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-router-dom@npm:^6.21.0":
-  version: 6.21.0
-  resolution: "react-router-dom@npm:6.21.0"
+"react-router-dom@npm:7.18.6":
+  version: 7.18.6
+  resolution: "react-router-dom@npm:7.18.6"
   dependencies:
-    "@remix-run/router": "npm:1.14.0"
-    react-router: "npm:6.21.0"
+    react-router: "npm:7.18.6"
   peerDependencies:
-    react: ">=16.8"
-    react-dom: ">=16.8"
-  checksum: 7448674817971c8138a96cef05331fb45cb6ef1f71450db9da87e3e0d0586bb55ba85fd3ca741ed7a22a40b6b6e544c11cff9e2fe3fa5957faf7b8ab74a0dcf3
+    react: ">=18"
+    react-dom: ">=18"
+  checksum: 106647b6d3935454fb1e08adca7935762fd9327dd4ee1728373199ec64b8af3b702363676f322766b9aafa0bcc01fafbc5ab5864386662da41b19fee9a445202
   languageName: node
   linkType: hard
 
-"react-router@npm:6.21.0, react-router@npm:^6.21.0":
-  version: 6.21.0
-  resolution: "react-router@npm:6.21.0"
+"react-router@npm:7.18.6":
+  version: 7.18.6
+  resolution: "react-router@npm:7.18.6"
   dependencies:
-    "@remix-run/router": "npm:1.14.0"
+    cookie: "npm:^1.0.1"
+    set-cookie-parser: "npm:^2.6.0"
   peerDependencies:
-    react: ">=16.8"
-  checksum: 10c58589d804b823caf3fd46403662769375618ae39ebae99f8df167c43440bb8ebf853548ba2bf96f21027c72c234d4fc37042643c91c9920f1cdfda5e03fab
+    react: ">=18"
+    react-dom: ">=18"
+  peerDependenciesMeta:
+    react-dom:
+      optional: true
+  checksum: 5276e8e19b4089dbe1c4be9097ccfbbcc19e238a1ed8fa3920fe27ba7832b081af764a5c55f636e7f4a50d1016d963edf84895fc56d9db5fa180628da5945fd0
   languageName: node
   linkType: hard
 
@@ -15970,6 +15945,13 @@ __metadata:
   version: 2.0.0
   resolution: "set-blocking@npm:2.0.0"
   checksum: 8980ebf7ae9eb945bb036b6e283c547ee783a1ad557a82babf758a065e2fb6ea337fd82cac30dd565c1e606e423f30024a19fff7afbf4977d784720c4026a8ef
+  languageName: node
+  linkType: hard
+
+"set-cookie-parser@npm:^2.6.0":
+  version: 2.7.3
+  resolution: "set-cookie-parser@npm:2.7.3"
+  checksum: 6a7defd64127656bceb15b5dabffd08df9840a56687a1be69834ded93c268b81448b497f14432dafbbe7b94055cab163798ca1ff86dffa06f7a3679e60f705c6
   languageName: node
   linkType: hard
 

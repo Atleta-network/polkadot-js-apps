@@ -1,7 +1,7 @@
 // Copyright 2017-2023 @polkadot/react-components authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { Location } from 'history';
+import type { Location } from 'react-router';
 import type { TabItem } from '../types.js';
 
 import React, { useEffect, useMemo } from 'react';
